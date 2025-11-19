@@ -1,0 +1,66 @@
+unit Unit2;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
+  Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.StdCtrls,
+  IdTCPClient, Data.DBXJSON, Unit1;
+
+type
+  TSignUpForm = class(TForm)
+    EditName: TEdit;
+    EditID: TEdit;
+    EditPassword: TEdit;
+    btnSubmit: TButton;
+    btnCancel: TButton;
+    MemoStatus: TMemo;
+    procedure btnSubmitClick(Sender: TObject);
+    procedure btnCancelClick(Sender: TObject);
+  private
+    { Private declarations }
+  public
+    { Public declarations }
+  end;
+
+var
+  SignUpForm: TSignUpForm;
+
+implementation
+
+{$R *.dfm}
+
+procedure TSignUpForm.btnSubmitClick(Sender: TObject);
+var
+  JSONObj: TJSONObject;
+begin
+  if not Assigned(Con) then
+  begin
+    MemoStatus.Lines.Add('서버에 연결되어 있지 않습니다.');
+    Exit;
+  end;
+
+  // JSON 생성
+  JSONObj := TJSONObject.Create;
+  try
+    JSONObj.AddPair('command', TJSONString.Create('signup'));
+    JSONObj.AddPair('name', TJSONString.Create(EditName.Text));
+    JSONObj.AddPair('id', TJSONString.Create(EditID.Text));
+    JSONObj.AddPair('pw', TJSONString.Create(EditPassword.Text));
+
+    // 서버 전송
+    Con.Client.IOHandler.WriteLn(JSONObj.ToString);
+    MemoStatus.Lines.Add('회원가입 요청 전송 완료');
+
+  finally
+    JSONObj.Free;
+  end;
+end;
+
+procedure TSignUpForm.btnCancelClick(Sender: TObject);
+begin
+  Close;
+end;
+
+end.
+

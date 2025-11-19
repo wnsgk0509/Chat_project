@@ -1,0 +1,42 @@
+object RegisterUserForm: TRegisterUserForm
+  Left = 0
+  Top = 0
+  Caption = 'RegisterUserForm'
+  ClientHeight = 500
+  ClientWidth = 600
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Edit1: TEdit
+    Left = 136
+    Top = 189
+    Width = 321
+    Height = 25
+    TabOrder = 0
+    Text = 'Edit1'
+  end
+  object Button1: TButton
+    Left = 463
+    Top = 189
+    Width = 42
+    Height = 25
+    Caption = #46321#47197
+    TabOrder = 1
+    OnClick = Button1Click
+  end
+  object StaticText1: TStaticText
+    Left = 136
+    Top = 232
+    Width = 188
+    Height = 17
+    Caption = #54620#44544' 8'#51088', '#50689#50612' 16'#51088', '#53945#49688#47928#51088' '#48520#44032#45733#13#10
+    TabOrder = 2
+  end
+end

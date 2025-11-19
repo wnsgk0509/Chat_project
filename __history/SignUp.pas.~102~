@@ -1,0 +1,64 @@
+﻿unit SignUp;
+
+interface
+
+uses
+   Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, System.SysUtils, Vcl.Dialogs,
+   Data, System.Classes, WinAPI.Windows, Vcl.Controls, Data.DBXJSON;
+
+type
+   TSignUpForm = class(TForm)
+      UserName: TEdit;
+      UserId: TEdit;
+      UserPassword: TEdit;
+      btnSignUpRequest: TButton;
+      btnCancel: TButton;
+      Panel1: TPanel;
+      lblId: TLabel;
+      lblName: TLabel;
+      lblPassword: TLabel;
+
+      procedure btnSignUpRequestClick(Sender: TObject);
+      procedure btnCancelClick(Sender: TObject);
+      procedure FormCreate(Sender: TObject);
+   private
+
+   public
+
+   end;
+
+var
+   SignUpForm: TSignUpForm;
+
+implementation
+
+{$R *.dfm}
+// ================= SignUpForm 생성 시 이벤트 연결 ================
+procedure TSignUpForm.FormCreate(Sender: TObject);
+
+begin
+   if Assigned(Con) then
+      Con.OnSignUpResponse := Connect.HandleSignUpResponse;
+end;
+
+
+procedure TSignUpForm.btnSignUpRequestClick(Sender: TObject);
+begin
+   if Assigned(Con) and Con.Client.Connected then
+      Con.SendJson('SIGNUP', [
+         'name', UserName.Text,
+         'id', UserId.Text,
+         'pw', UserPassword.Text
+      ], False);
+end;
+
+
+
+
+procedure TSignUpForm.btnCancelClick(Sender: TObject);
+begin
+   ModalResult := mrCancel; // 취소 시 폼 닫기
+end;
+
+end.
+

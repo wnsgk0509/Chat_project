@@ -1,0 +1,135 @@
+unit Unit1;
+
+interface
+
+uses
+  Forms, IdTCPClient, SysUtils, System.Classes,Dialogs;
+
+
+type
+  TMessageEvent = procedure(const MessageText: string) of object;
+
+  // 수신 스레드
+  TReceiveThread = class(TThread)
+  private
+    FClient: TIdTCPClient;
+  protected
+    procedure Execute; override;
+  public
+    constructor CreateWithClient(AClient: TIdTCPClient);
+  end;
+
+  // 소켓 관리
+  TCon = class
+  private
+    FClient: TIdTCPClient;
+    FOnMessage: TMessageEvent;
+    procedure ReadThread;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    procedure ConnectToServer;
+    property Client: TIdTCPClient read FClient;
+  end;
+
+var
+   Con : TCon;
+
+implementation
+
+uses Connect;
+{ TConForm }
+
+constructor TCon.Create;
+begin
+   inherited;
+   FClient := TIdTCPClient.Create(nil); // 소유자 nil → 수동 해제 필요
+end;
+
+destructor TCon.Destroy;
+begin
+  FClient.Free;
+  inherited;
+end;
+
+procedure TCon.ConnectToServer;
+begin
+//  FClient := TIdTCPClient.Create(Self);
+  try
+    FClient.Host := '127.0.0.1';
+    FClient.Port := 8000;
+    FClient.ConnectTimeout := 3000; // 3초 제한
+    FClient.Connect;
+
+    if FClient.Connected then //연결됐으면
+      begin
+      TThread.CreateAnonymousThread(ReadThread).Start; // 수신 스레드 시작
+      ShowMessage('서버 연결 성공! 로그인 정보를 입력하세요.'); // 연결 성공 알림
+    end;
+
+  except
+    on E: Exception do
+      ShowMessage('연결 중 오류: ' + E.Message);
+  end;
+end;
+
+//수신스레드
+procedure TCon.ReadThread;
+var
+  MessageText: string;
+begin
+  while FClient.Connected do
+  begin
+    try
+      MessageText := FClient.IOHandler.ReadLn;
+      if Assigned(FOnMessage) then
+        TThread.Synchronize(nil,
+          procedure
+          begin
+            FOnMessage(MessageText);
+          end);
+    except
+      Break;
+    end;
+  end;
+end;
+
+// 생성자 구현
+constructor TReceiveThread.CreateWithClient(AClient: TIdTCPClient);
+begin
+  inherited Create(True); // Suspended 상태로 생성
+  FClient := AClient;
+  FreeOnTerminate := True;
+  Resume; // 쓰레드 시작
+end;
+
+// 서버 메시지 반복 수신
+procedure TReceiveThread.Execute;
+var
+  MessageText: string;
+begin
+  while not Terminated do
+  begin
+    try
+      if FClient.Connected then
+      begin
+        MessageText := FClient.IOHandler.ReadLn;
+        if MessageText <> '' then
+        begin
+          // UI 갱신은 Queue 또는 Synchronize로 안전하게
+          TThread.Queue(nil,
+            procedure
+            begin
+              ConnectForm.HandleMessage(MessageText);
+            end);
+        end;
+      end;
+    except
+      on E: Exception do
+        ; // 필요시 로그 처리
+    end;
+  end;
+end;
+
+end.
+

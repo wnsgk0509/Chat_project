@@ -1,0 +1,107 @@
+object ConnectForm: TConnectForm
+  Left = 0
+  Top = 309
+  Caption = 'ConnectForm'
+  ClientHeight = 500
+  ClientWidth = 288
+  Color = clBtnFace
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  Position = poDesigned
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object Panel1: TPanel
+    Left = 0
+    Top = 0
+    Width = 288
+    Height = 500
+    Align = alClient
+    BevelOuter = bvNone
+    Color = clWhite
+    ParentBackground = False
+    TabOrder = 0
+    object Panel3: TPanel
+      Left = 0
+      Top = 0
+      Width = 288
+      Height = 400
+      Align = alClient
+      BevelOuter = bvNone
+      TabOrder = 0
+      object labelIP: TLabel
+        Left = 49
+        Top = 158
+        Width = 33
+        Height = 13
+        Caption = #50500#51060#46356
+      end
+      object labelPort: TLabel
+        Left = 49
+        Top = 197
+        Width = 44
+        Height = 13
+        Caption = #48708#48128#48264#54840
+      end
+      object UserId: TEdit
+        Left = 120
+        Top = 155
+        Width = 121
+        Height = 21
+        TabOrder = 0
+      end
+      object UserPassword: TEdit
+        Left = 120
+        Top = 190
+        Width = 121
+        Height = 21
+        PasswordChar = '*'
+        TabOrder = 1
+      end
+      object btnLogin: TButton
+        Left = 49
+        Top = 276
+        Width = 192
+        Height = 37
+        Cursor = crHandPoint
+        Caption = #47196#44536#51064
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 2
+        OnClick = btnLoginClick
+      end
+    end
+    object Panel2: TPanel
+      Left = 0
+      Top = 400
+      Width = 288
+      Height = 100
+      Align = alBottom
+      BevelOuter = bvNone
+      TabOrder = 1
+      object memoStatus: TMemo
+        Left = 0
+        Top = 0
+        Width = 288
+        Height = 100
+        Align = alClient
+        Lines.Strings = (
+          'memoStatus')
+        TabOrder = 0
+      end
+    end
+  end
+  object btnSignUp: TButton
+    Left = 166
+    Top = 319
+    Width = 75
+    Height = 25
+    Caption = #54924#50896#44032#51077
+    TabOrder = 1
+    OnClick = btnSignUpClick
+  end
+end

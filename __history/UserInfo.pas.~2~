@@ -1,0 +1,16 @@
+unit UserInfo;
+
+interface
+
+var
+  CurrentUserName: string; // 로그인한 사용자 이름
+  CurrentUserId: string;   // 로그인한 사용자 ID (필요시)
+
+implementation
+
+initialization
+  CurrentUserName := '';
+  CurrentUserId := '';
+
+end.
+

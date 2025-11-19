@@ -1,0 +1,111 @@
+object ChatRoomForm: TChatRoomForm
+  Left = 0
+  Top = 0
+  Caption = #52292#54021#48169
+  ClientHeight = 516
+  ClientWidth = 366
+  Color = clWhite
+  Font.Charset = DEFAULT_CHARSET
+  Font.Color = clWindowText
+  Font.Height = -11
+  Font.Name = 'Tahoma'
+  Font.Style = []
+  OldCreateOrder = False
+  OnCreate = FormCreate
+  PixelsPerInch = 96
+  TextHeight = 13
+  object PanelTop: TPanel
+    Left = 0
+    Top = 0
+    Width = 366
+    Height = 41
+    Align = alTop
+    Color = 16776176
+    ParentBackground = False
+    TabOrder = 0
+    object btnMore: TSpeedButton
+      Left = 342
+      Top = 1
+      Width = 23
+      Height = 39
+      Align = alRight
+      OnClick = btnMoreClick
+      ExplicitLeft = 160
+      ExplicitTop = 8
+      ExplicitHeight = 22
+    end
+    object ImgProfile: TImage
+      Left = 1
+      Top = 1
+      Width = 33
+      Height = 34
+    end
+    object lblRoomName: TLabel
+      Left = 40
+      Top = 3
+      Width = 3
+      Height = 13
+    end
+    object lblUserCount: TLabel
+      Left = 40
+      Top = 22
+      Width = 3
+      Height = 13
+    end
+  end
+  object PanelBottom: TPanel
+    Left = 0
+    Top = 432
+    Width = 366
+    Height = 84
+    Align = alBottom
+    Caption = 'Panel1'
+    TabOrder = 1
+    object btnSend: TButton
+      Left = 290
+      Top = 1
+      Width = 75
+      Height = 82
+      Align = alRight
+      Caption = #51204#49569
+      TabOrder = 0
+      OnClick = btnSendClick
+    end
+    object MemoMessage: TMemo
+      Left = 1
+      Top = 1
+      Width = 289
+      Height = 82
+      Align = alClient
+      ScrollBars = ssVertical
+      TabOrder = 1
+      OnKeyDown = MemoMessageKeyDown
+      OnKeyPress = MemoMessageKeyPress
+    end
+  end
+  object ScrollBoxMessages: TScrollBox
+    Left = 0
+    Top = 41
+    Width = 366
+    Height = 391
+    Align = alClient
+    Color = 16776176
+    ParentColor = False
+    TabOrder = 2
+  end
+  object PopupMenu1: TPopupMenu
+    Left = 312
+    object MenuInvite: TMenuItem
+      Caption = #52488#45824#54616#44592
+      OnClick = MenuInviteClick
+    end
+    object MenuExit: TMenuItem
+      Caption = #53748#51109
+      OnClick = MenuExitClick
+    end
+    object MenuLeave: TMenuItem
+      Caption = #45208#44032#44592
+      OnClick = MenuLeaveClick
+    end
+  end
+end

@@ -1,0 +1,78 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>1899-12-30 00:00:00.000.096,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.566,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas=\\.\Con.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.851,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.520,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.739,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\RegisterUser.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Client.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.829,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit3.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.769,C:\Users\eznix\Documents\RAD Studio\Projects\Client.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.790,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.676,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas=\\.\Con.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.780,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas=\\.\Con.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.680,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.322,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Conn.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.396,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas=\\.\Con.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.557,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.213,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main2.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.320,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit2.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.951,=C:\Users\eznix\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.937,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main2.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.952,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main2.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.613,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main2.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.473,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Connect.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit4.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.363,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\ChatRoom.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit3.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.527,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\ChatRoom.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.958,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit4.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.103,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\ChatRoom.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.076,=C:\Users\eznix\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.594,=C:\Users\eznix\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.767,=C:\Users\eznix\Documents\RAD Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.584,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas=\\.\Con.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.613,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main2.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.952,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main2.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.446,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Client.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Client.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.320,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.213,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.937,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.382,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Main.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.647,C:\Users\eznix\Documents\RAD Studio\Projects\Delphi_Chat_0901.dproj=C:\Users\eznix\Documents\RAD Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.704,\\.\Con=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.789,\\.\Con=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.595,\\.\Con=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.432,\\.\Con=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.103,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\ChatRoom.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.363,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\ChatRoom.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit3.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.276,\\.\Con=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Conn</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.833,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Delphi_Chat_0901.dproj=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Delphi_Chat_0901.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.459,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.081,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.747,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Delphi_Chat_0901.dproj=C:\Users\eznix\Documents\RAD Studio\Projects\Delphi_Chat_0901.dproj</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.740,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\RegisterUser.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Client.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.473,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Connect.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit4.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.769,C:\Users\eznix\Documents\RAD Studio\Projects\Client.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Unit1.dfm</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.136,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit2.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.184,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Conn.pas=</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.247,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Conn.pas=\\.\Con.pas</Transaction>
+    <Transaction>1899-12-30 00:00:00.000.446,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Client.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Client.dfm</Transaction>
+    <Transaction>2025-09-05 17:21:19.557,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Data.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>2025-09-05 17:39:46.855,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit2.pas=</Transaction>
+    <Transaction>2025-09-05 17:39:50.880,=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>2025-09-05 17:40:28.697,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\SignUp.pas=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.pas</Transaction>
+    <Transaction>2025-09-05 17:40:28.697,C:\Users\eznix\Documents\RAD Studio\Projects\Chat\SignUp.dfm=C:\Users\eznix\Documents\RAD Studio\Projects\Chat\Unit1.dfm</Transaction>
+  </Transactions>
+	<ProjectSortOrder AutoSort="0" SortType="0">
+    <File Path="ChatRoom.pas"/>
+    <File Path="ChatRoom.dfm"/>
+    <File Path="Connect.pas"/>
+    <File Path="Connect.dfm"/>
+    <File Path="Main.pas"/>
+    <File Path="Main.dfm"/>
+    <File Path="RegisterUser.pas"/>
+    <File Path="RegisterUser.dfm"/>
+    <File Path="Data.pas"/>
+    <File Path="SignUp.pas"/>
+    <File Path="SignUp.dfm"/>
+  </ProjectSortOrder>
+</BorlandProject>

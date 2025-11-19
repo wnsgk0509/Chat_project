@@ -1,0 +1,719 @@
+﻿unit Main;
+{
+-TMainForm
+채팅방 목록을 표시하고, 방 생성·초대·입장·삭제·로그아웃을 관리하는 메인 폼
+
+-OpenChatRooms
+현재 열려 있는 TChatRoomForm 리스트 관리 (같은 방 중복 생성 방지)
+
+-HandleInviteUser
+다른 사용자가 나를 초대한 경우 처리
+
+-RoomPanelDblClick
+채팅방 목록 패널 더블클릭 시 해당 방 입장 처리
+
+-AddChatRoom
+채팅방 목록에 새로운 방 UI 추가
+
+-HandleCreateRoom
+서버에서 방이 성공적으로 생성되었을 때 처리
+
+-UpdateRoomLastMessage
+방 목록에 마지막 메시지를 업데이트
+
+-ChatRoomFormClose
+채팅방 창 닫힐 때 이벤트 정리 및 메모리 해제
+
+-코드흐름
+1. 로그인 성공 → MainForm 표시
+2. 서버에서 “CREATE OK” 수신 → HandleCreateRoom 호출 → AddChatRoom
+3. ScrollBox에 채팅방 목록 표시
+4. 사용자가 패널 더블클릭 → RoomPanelDblClick → ChatRoomForm 열기
+5. 서버로 “INDEX” 전송 → 채팅기록 받아옴
+6. 누군가 초대 → HandleInviteUser → 새 방 추가
+7. 메시지 오면 → UpdateRoomLastMessage 갱신
++. 로그아웃 → btnLogoutClick → ConnectForm 복귀
+
+}
+
+interface
+
+uses
+   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes, Generics.Collections ,
+   Vcl.Forms, Vcl.Controls, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Graphics,
+   Vcl.Dialogs, Vcl.Imaging.pngimage, ChatRoom, Math, Data, Data.DBXJSON;
+
+type
+   //채팅방 목록 UI 관리
+   TRoomInfo = record
+      RoomName    : string;
+      LastMessage : string;
+//      UnreadCount : Integer;
+   end;
+
+   TMainForm = class(TForm)
+      Panel1      : TPanel;         // 상단 영역
+      btnCreate   : TButton;        // 방 생성 버튼
+      ScrollBox1  : TScrollBox;     // 채팅방 목록 스크롤
+      btnLogout   : TButton;        // 로그아웃 버튼
+      procedure FormCreate          (Sender: TObject);
+      procedure btnCreateClick      (Sender: TObject);
+      procedure btnlogoutClick      (Sender: TObject);
+      procedure RemoveRoomFromList  (const RoomName: string);
+      procedure FormClose           (Sender: TObject; var Action: TCloseAction);
+
+   private
+      FMyRoomList: TList<TRoomInfo>;
+
+      procedure RoomPanelDblClick   (Sender: TObject);
+      procedure ChatRoomFormClose   (Sender: TObject; var Action: TCloseAction);
+
+
+   public
+      OpenChatRooms: TList<TChatRoomForm>;	//현재 열려 있는 채팅방 목록(TChatRoomForm 객체 리스트).
+
+      procedure HandleCreateRoom          (Sender: TObject; const Msg: string);
+      procedure HandleInviteUser          (Sender: TObject; const Msg: string);
+      procedure HandleChatMessage         (Sender: TObject; const Msg: string);  //10/10 추가, 채팅이 왔을때 메인폼 업데이트 기능은 Main폼 내부 프로시져로 실행
+
+      procedure HandleChatHistory         (Sender: TObject; const Msg: string);
+      procedure HandleExitRoom            (Sender: TObject; const Msg: string);
+      procedure HandleUserList            (Sender: TObject; const Msg: string);
+      procedure HandleInviteAvailableUsers(Sender: TObject; const Msg: string);
+      procedure HandleError               (Sender: TObject; const Msg: string);
+
+      procedure RemoveRoomPanel           (const RoomName: string);
+      procedure UpdateRoomLastMessage     (const RoomInfo: TRoomInfo);
+      procedure AddChatRoom               (const RoomName, LastMsg: string; UserImages: TArray<string>);
+      procedure UpdateChatRoomPanel       (const RoomName: string; UserList: TStringList);
+
+      function ChatRoomFormFor            (const RoomName: string): TChatRoomForm;
+      function ComponentName              (const Input : string): string;
+   end;
+
+var
+   MainForm: TMainForm;
+
+
+implementation
+
+{$R *.dfm}
+
+uses Connect, UserInfo;
+
+procedure TMainForm.FormCreate(Sender: TObject);
+begin
+
+   ScrollBox1.VertScrollBar.Position := 0;        //스크롤바를 맨 위로 설정
+   // 전역 INVITE 이벤트 연결
+   if Assigned(Con) then                          //통신객체가 할당되었으면
+   begin
+      //이벤트 구독
+      Con.OnCreateRoom             := HandleCreateRoom;
+      Con.OnInviteUser             := HandleInviteUser;
+      Con.OnChatMessage            := HandleChatMessage;
+      Con.OnChatHistory            := HandleChatHistory;
+      Con.OnExitRoom               := HandleExitRoom;
+      Con.OnUserList               := HandleUserList;
+      Con.OnInviteAvailableUsers   := HandleInviteAvailableUsers;
+      Con.OnError                  := HandleError;
+   end;
+
+   FMyRoomList    := TList<TRoomInfo>.Create;      //채팅방 정보를 저장해주는 리스트 생성(방이름, 마지만 메시지)
+   OpenChatRooms  := TList<TChatRoomForm>.Create;  //열려있는 채팅방을 관리해주는 리스트 생성
+end;
+
+//=======채팅이력 응답 처리==========//
+procedure TMainForm.HandleChatHistory(Sender: TObject; const Msg: string);
+var
+CR       :TChatRoomForm;
+RoomName :string;
+begin
+   RoomName := Con.ExtractRoomNameFromJson(Msg);   //방이름을 안전하게 가져와서 저장
+
+   for CR in OpenChatRooms do                      //열려있는 방 중에서
+   begin
+      if CR.CurrentRoomName = RoomName then        //본인이 찾는방과 일치하면
+      begin
+         CR.HandleChatHistory(Sender, Msg);        //채팅 이력 불러오는기능 수행
+         Break;
+      end;
+   end;
+end;
+
+//========채팅 응답 처리 ========//
+procedure TMainForm.HandleChatMessage(Sender: TObject; const Msg: string);
+var
+   JSONObject        : TJSONObject;
+   RoomName, LastMsg : string;
+   TargetRoomForm    : TChatRoomForm;
+   i                 : Integer;
+   RoomInfo          : TRoomInfo;
+begin
+   //  메시지에서 핵심 정보(방 이름, 내용)를 추출
+   JSONObject := TJSONObject.ParseJSONValue(Msg) as TJSONObject;
+   try
+      if JSONObject = nil then Exit;                     //객체가 비었을시 실행하지 않고
+      RoomName := SafeGetValue(JSONObject, 'room');      //각 기능에 맞는 키의 값을 저장
+      LastMsg  := SafeGetValue(JSONObject, 'message');
+   finally
+      JSONObject.Free;
+   end;
+
+   //  메시지에 해당하는 방의 정보(방이름, 마지막 메시지) 찾는 루프
+   for i := 0 to FMyRoomList.Count - 1 do                //본인이 접속한방 개수만큼 반복
+   begin
+      if FMyRoomList[i].RoomName = RoomName then         //본인이 찾는방과 접속한 방을 찾을시
+      begin
+         RoomInfo := FMyRoomList[i];                     //최신화된 실제 리스트를 복사본(UI관리용 리스트)에 저장
+         RoomInfo.LastMessage := LastMsg;                //복사본 마지막 메시지에 실제 마지막메시지 저장
+         FMyRoomList[i] := RoomInfo;                     //수정 완료된 복사본 리스트를 실제 리스트에 저장
+
+         //  창이 닫혀있는 경우에만 '안 읽음' 카운트
+//         if not Assigned(TargetRoomForm) then
+//         begin
+//            RoomInfo.UnreadCount := RoomInfo.UnreadCount + 1;
+//         end;
+
+         // 업데이트된 데이터로 메인 화면의 UI(배너)를 새로고침합니다.
+         UpdateRoomLastMessage(FMyRoomList[i]);
+
+         //  창이 열려있는지 확인
+         TargetRoomForm := ChatRoomFormFor(RoomName);    //ChatRoomFormFor 은 중복 방 생성 방지 코드
+
+         // 만약 창이 열려있다면, 해당 창에 메시지를 전달
+         if Assigned(TargetRoomForm) then
+         begin
+            TargetRoomForm.HandleChatMessage(Sender, Msg);
+         end;
+
+         Break; // 해당 방을 찾았으므로 더 이상 루프를 돌 필요가 없습니다.
+      end;
+   end;
+end;
+
+//초대가능한 유저의 데이터(이름) 수신
+procedure TMainForm.HandleInviteAvailableUsers(Sender: TObject; const Msg: string);
+var
+   CR       : TChatRoomForm;
+   RoomName : string;
+begin
+   // 메시지에서 어느 방의 사용자 목록인지 방 이름을 추출
+   RoomName := Con.ExtractRoomNameFromJson(Msg);
+
+   // 현재 열려있는 모든 채팅방을 확인
+   for CR in OpenChatRooms do
+   begin
+      // 이름이 일치하는 창을 찾을시
+      if CR.CurrentRoomName = RoomName then
+      begin
+         // 해당 창의 HandleUserList에게 메시지 전달
+         CR.HandleInviteAvailableUsers(Sender, Msg);
+         Break;
+      end;
+   end;
+end;
+
+//=========초대 응답 =========
+procedure TMainForm.HandleInviteUser(Sender: TObject; const Msg: string);
+var
+   JSONObject        : TJSONObject;
+   RoomName, FromUser: string;
+   NewRoomInfo       : TRoomInfo;
+   i                 : Integer;
+   AlreadyExists     : Boolean;
+begin
+   JSONObject := TJSONObject.ParseJSONValue(Msg) as TJSONObject;
+   try
+      if JSONObject = nil then Exit;
+
+      // 초대 정보(보낸 사람, 방 이름) 추출
+      RoomName := SafeGetValue(JSONObject, 'room');
+      FromUser := SafeGetValue(JSONObject, 'username');
+
+      // 내가 보낸 초대일시 종료
+      if SameText(FromUser, UserInfo.CurrentUserName) then Exit;
+
+      ShowMessage(Format('%s님이 %s 방에 초대했습니다.', [FromUser, RoomName]));
+
+      // 이미 내 채팅 목록에 있는 방인지 확인
+      AlreadyExists := False;
+
+      for i := 0 to FMyRoomList.Count - 1 do    //본인이 접속한 방 만큼 반복
+      begin
+         if FMyRoomList[i].RoomName = RoomName then     //내방목록중에서 찾는 방이 있는지 검색
+         begin
+            AlreadyExists := True;                      //이미 있을시 True로 변경
+            Break;
+         end;
+      end;
+
+      // 목록에 없는 새로운 방일 경우에만 데이터와 UI를 추가
+      if not AlreadyExists then  //방에 들어와있지 않을떄 실행
+      begin
+         // 데이터 모델(TRoomInfo)을 만들어 FMyRoomList에 추가
+         NewRoomInfo.RoomName := RoomName;
+         NewRoomInfo.LastMessage := Format('%s님이 초대했습니다.', [FromUser]);
+//         NewRoomInfo.UnreadCount := 1;
+         FMyRoomList.Add(NewRoomInfo);     //내 방목록에 초대된 방 추가
+
+         // 메인 화면에 새로운 방 배너(UI)를 추가
+         AddChatRoom(NewRoomInfo.RoomName, NewRoomInfo.LastMessage, TArray<string>.Create('default_profile.png'));    //배너 추가
+    end;
+   finally
+      JSONObject.Free;
+   end;
+end;
+
+//=======유저리스트 처리 ========//
+procedure TMainForm.HandleUserList(Sender: TObject; const Msg: string);
+var
+   CR       : TChatRoomForm;
+   RoomName : string;
+begin
+   // 메시지에서 어느 방의 사용자 목록인지 방 이름을 추출
+   RoomName := Con.ExtractRoomNameFromJson(Msg);
+
+   // 현재 열려있는 모든 채팅방을 확인
+   for CR in OpenChatRooms do
+   begin
+      // 본인이 찾는 방을 찾을시
+      if CR.CurrentRoomName = RoomName then
+      begin
+         // 해당 창의 HandleUserList에게 메시지 전달
+         CR.HandleUserList(Sender, Msg);
+         Break;
+      end;
+   end;
+end;
+
+{이미 열려있는 채팅방 중복 생성 방지}
+function TMainForm.ChatRoomFormFor(const RoomName: string): TChatRoomForm;
+var
+   i: Integer;
+begin
+   Result := nil;    //기본값 nil
+   for i := 0 to OpenChatRooms.Count - 1 do    //열려있는 방 중에서
+   begin
+      if Assigned(OpenChatRooms[i]) and
+         SameText(OpenChatRooms[i].CurrentRoomName, RoomName) then      //유효한 상태 와 찾는방 이름과 일치하면
+      begin
+         Result := OpenChatRooms[i];                                    //반환값에 저장
+         Exit;
+      end;
+   end;
+end;
+
+
+
+
+function TMainForm.ComponentName(const Input: string): string;
+var
+  C: Char;
+  I: Integer;
+begin
+  Result := '';
+  if Input = '' then Exit;
+
+  // 1. 첫 글자 검사 (숫자로 시작하면 안 됨)
+  C := Input[1];
+  if (C in ['a'..'z', 'A'..'Z', '_']) then
+    Result := C
+  else
+    Result := '_'; // 영문자나 _가 아니면 _로 시작
+
+  // 2. 나머지 글자 검사
+  for I := 2 to Length(Input) do
+  begin
+    C := Input[I];
+    // 영문, 숫자, _ 만 허용
+    if (C in ['a'..'z', 'A'..'Z', '0'..'9', '_']) then
+      Result := Result + C
+    else
+      Result := Result + '_'; // 그 외 (한글, 공백, 특수문자)는 모두 _로 변경
+  end;
+end;
+
+// 더블클릭 이벤트 처리 (패널, 라벨, 이미지)
+procedure TMainForm.RoomPanelDblClick(Sender: TObject);
+var
+   RoomName    : string;          // 클릭한 방의 이름
+   ExistingForm: TChatRoomForm;  //추석 수정( 이미 열려있는방 중복 생성 방지)
+begin
+   // 클릭한 패널에서 방 이름 가져오기
+   if Sender is TPanel then
+      RoomName := TPanel(Sender).Hint
+   else if Sender is TLabel then
+      RoomName := TLabel(Sender).Parent.Hint
+   else if Sender is TImage then
+      RoomName := TImage(Sender).Parent.Hint
+   else
+      Exit;
+
+  // 이미 열린 방 확인 (추석 수정)
+   ExistingForm := ChatRoomFormFor(RoomName);
+      if Assigned(ExistingForm) then    //이미 열려있는 경우
+      begin
+         //  찾은 폼을 앞으로 가져오고 프로시저를 종료
+         ExistingForm.BringToFront;
+         Exit;
+      end;
+
+      try
+         ChatRoomForm := TChatRoomForm.CreateWithRoom(nil, RoomName);  //수동으로 창을 열기위해 nil 로 설정 채팅방이 만들어질때 채팅방 이름을 클릭한 방으로  지정
+         ChatRoomForm.CurrentRoomName := RoomName;                     //채팅방의 현재 방 이름을 클릭한 방 이름으로 저장
+         // OnClose 연결
+         ChatRoomForm.OnClose := ChatRoomFormClose;                    //채팅방이 닫히는것을 메인폼에서 관리
+
+         // 화면에 표시 및 리스트에 등록
+         ChatRoomForm.Show;
+         OpenChatRooms.Add(ChatRoomForm);                              //창을 열었으니 열린창 목록의 추가
+
+         // 채팅이력 요청
+         if Assigned(Con) and Con.Client.Connected then                //통신객체 생성 및 연결 여부 확인하고
+         begin
+            Con.SendJson('INDEX', ['room', RoomName]);                 //채팅이력 서버에 요청
+         end
+         else
+
+            ShowMessage('서버에 연결되어 있지 않습니다.');
+      except
+      on E: Exception do
+      begin
+         ShowMessage('채팅방을 열 수 없습니다: ' + E.Message);
+         ChatRoomForm.Free;
+         Exit;
+      end;
+   end;
+end;
+
+//======== 채팅방 닫기 =========//
+procedure TMainForm.ChatRoomFormClose(Sender: TObject; var Action: TCloseAction);
+begin
+
+   // 리스트에서 제거
+   OpenChatRooms.Remove(TChatRoomForm(Sender));
+
+   // 메모리 해제
+   Action := caFree;
+end;
+
+//======== 방목록리스트 에서 제거 ======//
+procedure TMainForm.RemoveRoomFromList(const RoomName: string);
+var
+   i: Integer;
+begin
+   for i := FMyRoomList.Count - 1 downto 0 do      //방목록만큼 반복
+   begin
+      if FMyRoomList[i].RoomName = RoomName then   //찾는 방이 나오면
+      begin
+         FMyRoomList.Delete(i);                    //삭제한다
+         Break;
+      end;
+   end;
+end;
+
+//===========채팅방 배너 제거 =====//
+procedure TMainForm.RemoveRoomPanel(const RoomName: string);
+var
+   i: Integer;
+   pnl: TPanel;
+begin
+   for i := ScrollBox1.ControlCount - 1 downto 0 do   //채팅방 배너만큼 반복
+   begin
+      if ScrollBox1.Controls[i] is TPanel then        //찾고있는 것이 TPanel 타입  인지 확인
+      begin
+         pnl := TPanel(ScrollBox1.Controls[i]);       //pnl 에 TPanel 타입을 저장한후
+         if pnl.Name = 'Panel_' + RoomName then       //pnl 이름이 Panle_방이름 일시
+         begin
+            pnl.Free;                                 // 패널 제거
+            Break;
+         end;
+      end;
+   end;
+end;
+
+
+//방생성 버튼 쿨릭
+procedure TMainForm.btnCreateClick(Sender: TObject);
+var
+   RoomName: string;
+   MaxLen  : Integer;
+   // JSONObj : TJSONObject;
+begin
+   RoomName := '';
+   MaxLen   := 20;
+
+   if InputQuery('방 생성', '방 이름을 입력하세요:', RoomName) then
+   begin
+      RoomName := Trim(RoomName);
+
+      // 유효성 검사 (공백 체크)
+      if RoomName = '' then
+      begin
+         ShowMessage('공백은 불가능 합니다.');
+         Exit;
+      end;
+      // 유효성 검사 (글자수 제한)
+      if Length(RoomName)> MaxLen then
+      begin
+         ShowMessage(Format('방 이름은 %d글자를 초과할 수 없습니다.', [MaxLen]));
+         Exit;
+      end;
+
+      if Assigned(Con) and Con.Client.Connected then
+      begin
+         Con.SendJson('CREATE', ['room', RoomName]);
+      end;
+
+   end
+   else
+   begin
+      // Cancel 버튼을 눌렀을 때
+      Exit;
+   end;
+end;
+
+//로그아웃 버튼 클릭
+procedure TMainForm.btnLogoutClick(Sender: TObject);
+begin
+   Self.Close;         // MainForm 닫기
+end;
+
+procedure TMainForm.FormClose(Sender: TObject; var Action: TCloseAction);
+begin
+   // 로그아웃 시 필요한 작업 (서버 연결 해제 등)
+   if Assigned(Con) and Con.Client.Connected then
+   begin
+//      Con.Client.Disconnect;
+      Con.DisconnectFromServer
+   end;
+
+   UserInfo.CurrentUserName := '';
+
+   if Assigned(Con) then
+   begin
+      Con.OnCreateRoom             := nil;
+      Con.OnInviteUser             := nil;
+      Con.OnChatMessage            := nil;
+      Con.OnChatHistory            := nil;
+      Con.OnExitRoom               := nil;
+      Con.OnUserList               := nil;
+      Con.OnInviteAvailableUsers   := nil;
+      Con.OnError                  := nil;
+   end;
+
+   // 숨어있던 로그인창(ConnectForm)을 다시 보여줌
+   ConnectForm.Show;
+
+   // MainForm은 메모리에서 해제(이전 사용자의 데이터)
+   Action := caFree;
+end;
+
+//==========방생성 응답 ==========//
+procedure TMainForm.HandleCreateRoom(Sender: TObject; const Msg: string);
+var
+   JSONObject: TJSONObject;
+   RoomName, LastMsg, Status: string;
+   NewRoomInfo: TRoomInfo; // 새로 추가할 방의 '데이터'를 담을 변수
+begin
+
+
+   JSONObject := TJSONObject.ParseJSONValue(Msg) as TJSONObject;    //서버에서 받은 데이터 객체타입으로 변환후 저장
+   try
+      if JSONObject = nil then Exit;
+
+      Status := SafeGetValue(JSONObject, 'status');                  // 상태 저장
+
+      // 서버로부터 'OK' 응답을 받았을 때 실행
+      if Status = 'OK' then
+      begin
+         // 서버가 보내준 새 방 정보를 추출
+         RoomName := SafeGetValue(JSONObject, 'room');
+
+         // 방을 만들었을 때의 마지막 메시지 설정
+         LastMsg  := '새로운 대화방이 생성되었습니다.';
+
+      //설정한 정보로 '데이터 모델'을 만듭니다.
+         NewRoomInfo.RoomName := RoomName;
+         NewRoomInfo.LastMessage := LastMsg;
+//       NewRoomInfo.UnreadCount := 0;
+
+         // 완성된 데이터 모델을 내 방 목록(FMyRoomList)에 추가합니다.
+         FMyRoomList.Add(NewRoomInfo);
+
+         // 추가된 데이터를 기반으로 화면에 새로운 방 배너를 생성합니다.
+         AddChatRoom(RoomName, LastMsg, TArray<string>.Create('default_profile.png'));
+      end;
+   finally
+      JSONObject.Free;
+   end;
+end;
+
+
+procedure TMainForm.HandleError(Sender: TObject; const Msg: string);
+begin
+   ShowMessage('같은이름의 방이 이미 있습니다');
+end;
+
+//========방 퇴장 응답======//
+procedure TMainForm.HandleExitRoom(Sender: TObject; const Msg: string);
+var
+   CR       : TChatRoomForm;
+   RoomName : string;
+begin
+   // 메시지에서 어느 방의 이벤트인지 방 이름을 추출
+   RoomName := Con.ExtractRoomNameFromJson(Msg);
+
+   // 현재 열려있는 모든 채팅창을 확인
+   for CR in OpenChatRooms do
+   begin
+      //이름이 일치하는 창을 찾을시
+      if CR.CurrentRoomName = RoomName then
+      begin
+         //해당 창 이름을  HandleExitRoom에게 메시지를 전달
+         Cr.HandleExitRoom(Sender, Msg);
+         Break;
+      end;
+   end;
+end;
+
+//업데이트 된 데이터 UI에 최신화
+procedure TMainForm.UpdateRoomLastMessage(const RoomInfo: TRoomInfo);
+var
+   i           : Integer;
+   RoomPanel   : TPanel;
+   LastMsgLabel: TLabel;
+   TimeStr     : string;
+begin
+   TimeStr := FormatDateTime('hh:nn', Now); // 현재 시간
+
+   //ScrollBox에서 이름이 같은 패널을 찾음
+   for i := 0 to ScrollBox1.ControlCount - 1 do    //생성된 방 배너만큼 반복
+   begin
+      if (ScrollBox1.Controls[i] is TPanel) and (ScrollBox1.Controls[i].Hint  = RoomInfo.RoomName) then         //배너가 TPanel 타입 이고 배너의 이름과 찾는 방 이름과 일치하면
+      begin
+         RoomPanel := TPanel(ScrollBox1.Controls[i]);      //RoomPanle 에 TPanel 타입 저장
+
+            LastMsgLabel := TLabel(RoomPanel.FindComponent('lblLastMsg_' + RoomInfo.RoomName));  //LastMsgLavel 이라는 변수에 lblLastMsg_ 방 이름 저장후
+            //라벨의 캡션을 '마지막 메시지'와 '시간'을 합쳐서 업데이트
+            if Assigned(LastMsgLabel) then
+               LastMsgLabel.Caption := Format('%s  [%s]', [RoomInfo.LastMessage, TimeStr]);
+            Break;
+
+      end;
+   end;
+end;
+
+
+
+// 채팅방 패널 추가
+procedure TMainForm.AddChatRoom(const RoomName, LastMsg: string; UserImages: TArray<string>);
+var
+   RoomPanel               : TPanel;
+   lblName, lblMsg         : TLabel;
+   ImgProfile              : TImage;
+   i, YPos, ImgX, ImgCount : Integer;
+   Image_Folder            : String;
+begin
+
+   // Y 위치 계산
+   YPos := 10;
+   if ScrollBox1.ControlCount > 0 then
+      YPos := ScrollBox1.Controls[ScrollBox1.ControlCount - 1].Top +
+              ScrollBox1.Controls[ScrollBox1.ControlCount - 1].Height + 10;
+
+   // 패널 생성
+   RoomPanel               := TPanel.Create(ScrollBox1);
+   RoomPanel.Parent        := ScrollBox1;
+   RoomPanel.SetBounds(10, YPos, ScrollBox1.ClientWidth - 20, 70);
+   RoomPanel.BevelOuter    := bvNone;
+   RoomPanel.Color         := clWhite;
+   RoomPanel.Hint          := RoomName;
+   RoomPanel.Name          := 'Panel_' + StringReplace(RoomName, ' ', '_', [rfReplaceAll]);
+   RoomPanel.Caption       := '';
+
+
+
+   // 더블클릭 이벤트로 실제 입장
+   RoomPanel.OnDblClick    := RoomPanelDblClick;
+
+   // 라벨 생성
+   lblName                 := TLabel.Create(RoomPanel);
+   lblName.Parent          := RoomPanel;
+   lblName.SetBounds(70, 10, RoomPanel.Width - 80, 20);
+   lblName.Caption         := RoomName;
+   lblName.Font.Size       := 12;
+   lblName.Font.Style      := [fsBold];
+   lblName.OnDblClick      := RoomPanelDblClick;
+
+   lblMsg                  := TLabel.Create(RoomPanel);
+   lblMsg.Parent           := RoomPanel;
+   lblMsg.Name             := 'lblLastMsg_' + StringReplace(RoomName, ' ', '_', [rfReplaceAll]); // 방마다 이름 부여
+   lblMsg.SetBounds(70, 35, RoomPanel.Width - 80, 20);
+   lblMsg.Caption          := Format('%s  [%s]', [LastMsg, FormatDateTime('hh:nn', Now)]);
+   lblMsg.Font.Size        := 10;
+   lblMsg.Font.Color       := clGray;
+   lblMsg.OnDblClick       := RoomPanelDblClick;
+
+   // 이미지 최대 4명
+   ImgCount := Length(UserImages);
+   if ImgCount > 4 then
+      ImgCount := 4;
+
+   ImgX := 10;
+   if ImgCount > 0 then
+   begin
+      for i := 0 to ImgCount - 1 do
+      begin
+         ImgProfile           := TImage.Create(RoomPanel);
+         ImgProfile.Parent    := RoomPanel;
+         ImgProfile.SetBounds(ImgX, 10, 50, 50);
+         ImgProfile.Stretch   := True;
+
+         Image_Folder := ExtractFilePath(Application.ExeName) + 'image';
+         OutputDebugString(PChar('Image_Folder = ' + Image_Folder));
+         if DirectoryExists(Image_Folder) then
+         begin
+            if (UserImages[i] <> '') and FileExists(UserImages[i]) then
+               ImgProfile.Picture.LoadFromFile(UserImages[i])
+            else if FileExists(Image_Folder + '\default_profile.png') then
+               ImgProfile.Picture.LoadFromFile(Image_Folder + '\default_profile.png');
+         end else
+         begin
+            ForceDirectories(Image_Folder);
+            ShowMessage('image 폴더가 존재하지 않습니다.');
+         end;
+
+         Inc(ImgX, 55); // 이미지 간격
+      end;
+   end;
+
+end;
+
+//=========채팅방 패널(상단) 추가===========//
+procedure TMainForm.UpdateChatRoomPanel(const RoomName: string; UserList: TStringList);
+var
+   i: Integer;
+   ChatRoom: TChatRoomForm;
+begin
+   // OpenChatRooms 리스트에서 방 찾기
+   for i := 0 to OpenChatRooms.Count - 1 do    //열려있는 창 중에서
+   begin
+      if SameText(OpenChatRooms[i].CurrentRoomName, RoomName) then   //찾는 방과 일치하면
+      begin
+         ChatRoom := OpenChatRooms[i];              //ChatRoom 에 열려있는방 저장
+
+         // 채팅방 상단에 표시된 유저 수 갱신
+         if Assigned(ChatRoom.lblUserCount) then
+            ChatRoom.lblUserCount.Caption := IntToStr(UserList.Count);
+
+         ChatRoom.BringToFront;
+         Exit;
+      end;
+   end;
+end;
+
+
+
+end.

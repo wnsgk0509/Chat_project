@@ -1,0 +1,44 @@
+program Delphi_Chat_0901;
+
+uses
+  Vcl.Forms,
+  IdStack,
+  System.UITypes,
+  Main in 'Main.pas' {MainForm},
+  Connect in 'Connect.pas' {ConnectForm},
+  UserInfo in 'UserInfo.pas'; // (기타 다른 유닛들)
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+
+  // ★★★ 이 코드가 핵심입니다 ★★★
+  // ConnectForm을 자동으로 생성하도록 설정합니다.
+  Application.CreateForm(TConnectForm, ConnectForm);
+
+  // 로그아웃하면 다시 로그인창이 뜨는 '무한 루프'
+  while True do
+  begin
+    // 1. 로그인창을 띄우고, 성공(mrOK)할 때까지 기다립니다.
+    if ConnectForm.ShowModal <> mrOK then
+      Break; // X버튼이나 mrCancel이면 앱 완전 종료
+
+    // --- 2. 로그인 성공 ---
+    try
+      // MainForm을 새로 생성하고 실행합니다.
+      Application.CreateForm(TMainForm, MainForm);
+
+      // ★★★ MainForm에 로그인 정보를 전달합니다 ★★★
+//      MainForm.MyUserName := UserInfo.CurrentUserName;
+
+      Application.Run; // MainForm이 닫힐 때(로그아웃)까지 여기서 대기
+
+    finally
+      // MainForm은 OnClose 이벤트에서 caFree로 자동 해제됩니다.
+    end;
+
+    // --- 3. 로그아웃 완료 ---
+    // 루프의 처음으로 돌아가 ConnectForm.ShowModal을 다시 실행합니다.
+  end;
+end.

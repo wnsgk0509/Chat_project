@@ -1,0 +1,35 @@
+program Delphi_Chat_0901; // 프로젝트 생성 시 설정한 이름 (예: Project1)
+
+uses
+  Vcl.Forms,
+  Vcl.Dialogs,
+  Connect in 'Connect.pas' {ConnectForm},
+  Controls,
+  Data in 'Data.pas',
+  SignUp in 'SignUp.pas' {SignUpForm},
+  Main in 'Main.pas' {MainForm},
+  ChatRoom in 'ChatRoom.pas' {ChatRoomForm};
+
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+
+  ConnectForm := TConnectForm.Create(nil);
+  try
+    if ConnectForm.ShowModal = mrOK then
+    begin
+      Application.CreateForm(TMainForm, MainForm); // MainForm만 생성
+      Application.Run; // 메시지 루프 시작
+    end
+    else
+      Application.Terminate;
+  finally
+    ConnectForm.Free;
+  end;
+end.
+
+
+
