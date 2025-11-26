@@ -239,9 +239,9 @@ begin
       begin
          if Assigned(OnError) then
          OnError(Self, MsgText) // OnError 이벤트 호출
-      end
+
       // 이벤트 호출 (Cmd 값 비교 + 이벤트 연결 여부 확인)
-      else if SameText(Cmd, 'LOGIN')                       and Assigned(OnLoginResponse) then
+      else if SameText(Cmd, 'LOGIN')                  and Assigned(OnLoginResponse) then
          OnLoginResponse(Self, MsgText)
       else if SameText(Cmd, 'CREATE')                 and Assigned(OnCreateRoom) then
          OnCreateRoom(Self, MsgText)
@@ -260,6 +260,7 @@ begin
 
       else
          OutputDebugString(PChar('Unknown command received: ' + Cmd));
+      end
    finally
 
       JSONObject.Free;

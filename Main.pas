@@ -424,7 +424,6 @@ procedure TMainForm.btnCreateClick(Sender: TObject);
 var
    RoomName: string;
    MaxLen  : Integer;
-   // JSONObj : TJSONObject;
 begin
    RoomName := '';
    MaxLen   := 20;
@@ -476,7 +475,6 @@ begin
    // 로그아웃 시 필요한 작업 (서버 연결 해제 등)
    if Assigned(Con) and Con.Client.Connected then
    begin
-//      Con.Client.Disconnect;
       Con.DisconnectFromServer
    end;
 
@@ -525,10 +523,9 @@ begin
          // 방을 만들었을 때의 마지막 메시지 설정
          LastMsg  := '새로운 대화방이 생성되었습니다.';
 
-      //설정한 정보로 '데이터 모델'을 만듭니다.
+         //설정한 정보로 '데이터 모델'을 만듭니다.
          NewRoomInfo.RoomName := RoomName;
          NewRoomInfo.LastMessage := LastMsg;
-//       NewRoomInfo.UnreadCount := 0;
 
          // 완성된 데이터 모델을 내 방 목록(FMyRoomList)에 추가합니다.
          FMyRoomList.Add(NewRoomInfo);

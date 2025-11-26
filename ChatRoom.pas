@@ -105,8 +105,8 @@ type
       procedure AddUser                      (const UserName: string);
 
       property UserImages        : TArray<string> read FUserImages write FUserImages;
-      property CurrentRoomName   : string read FCurrentRoomName write FCurrentRoomName;	//서버와 동기화된 방 이름
       property CurrentRoomUsers  : TStringList read FCurrentRoomUsers write FCurrentRoomUsers;
+      property CurrentRoomName   : string read FCurrentRoomName write FCurrentRoomName;	//서버와 동기화된 방 이름
       property MyUserName        : string read FMyUserName write FMyUserName;
 
    end;
@@ -170,7 +170,6 @@ begin
    MenuInvite.OnClick   := MenuInviteClick;
 end;
 
- //=========
 constructor TChatRoomForm.CreateWithRoom(AOwner: TComponent; const ACurrentRoomName: string);
 
 begin
@@ -242,7 +241,7 @@ begin
          else if SameText(Status, 'INFO') then                         //INFO 일시 서버 알림
          begin
             // status가 'INFO'이면 시스템 메시지로 처리
-            AddMessage('', ChatMsg, False, '', True);                  //4번쨰가 유저 이미지 5번째가 시스템알림인지
+            AddMessage('', ChatMsg, False, '', True);                  //4번째 파라미터 유저 이미지, 5번째가 시스템알림인지
          end;
       end;
    finally
@@ -304,7 +303,7 @@ begin
    end;
 end;
 
-//==========유저 목록 요청=========
+//==========유저 목록 요청=========//
 procedure TChatRoomForm.SendUserListRequest(const RoomName: string);
 begin
    try
@@ -335,7 +334,7 @@ begin
       CurrentRoomUsers.Clear;
 
       // 서버에서 받은 유저 이름 배열 처리
-      UsersArray := JSONObject.GetValue('users') as TJSONArray;       //요청한 방 안에이는 모든유저 이름을 배열에 저장하고
+      UsersArray := JSONObject.GetValue('users') as TJSONArray;       //요청한 방 안에있는 모든유저 이름을 배열에 저장하고
       if Assigned(UsersArray) then
          for i := 0 to UsersArray.Size - 1 do                        //채팅방에 있는 유저수 만큼 반복
          begin
@@ -390,7 +389,7 @@ begin
    MsgPanel.Margins.Right     := 20;  // 스크롤바 여백 확보
 
 
-     // 시스템 메시지인 경우
+   // 시스템 메시지인 경우
    if IsSystem then
    begin
       lblSys              := TLabel.Create(MsgPanel);
@@ -411,7 +410,7 @@ begin
    end
    else //유저 채팅인 경우
    begin
-      // 일반 메시지 라벨 생성
+   // 일반 메시지 라벨 생성
    lblMsg            := TLabel.Create(MsgPanel);
    lblMsg.Parent     := MsgPanel;
    lblMsg.WordWrap   := True;
@@ -468,7 +467,7 @@ begin
    end
    else //(상대)
    begin
-    // 프로필 이미지
+      // 프로필 이미지
       Img         := TImage.Create(MsgPanel);
       Img.Parent  := MsgPanel;
       Img.SetBounds(Padding, Padding, 40, 40);
@@ -488,7 +487,7 @@ begin
       if FileExists(Image_Folder + ImgFile) then
          Img.Picture.LoadFromFile(Image_Folder + ImgFile);
 
-    // 이름 라벨
+      // 이름 라벨
       lblName              := TLabel.Create(MsgPanel);
       lblName.Parent       := MsgPanel;
       lblName.Caption      := UserName;

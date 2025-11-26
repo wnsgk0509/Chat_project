@@ -16,40 +16,24 @@ File_13=TSourceModule,'c:\program files (x86)\embarcadero\rad studio\12.0\source
 File_14=TSourceModule,'c:\program files (x86)\embarcadero\rad studio\12.0\source\Indy10\Core\IdIOHandlerStack.pas',0,1,252,18,271,0,0,,
 
 [Modules]
-Module0=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas
-Module1=default.htm
-Module2=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Delphi_Chat_0901.dproj
-Module3=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas
+Module0=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas
+Module1=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas
+Module2=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Connect.pas
+Module3=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\UserInfo.pas
 Module4=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Data.pas
-Module5=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\UserInfo.pas
-Module6=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Connect.pas
+Module5=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Delphi_Chat_0901.dproj
+Module6=default.htm
 Count=7
 EditWindowCount=1
-
-[C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas]
-ModuleType=TSourceModule
-FormState=1
-FormOnTop=0
-
-[default.htm]
-ModuleType=TURLModule
-
-[C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Delphi_Chat_0901.dproj]
-ModuleType=TBaseProject
 
 [C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas]
 ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
-[C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Data.pas]
+[C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas]
 ModuleType=TSourceModule
-FormState=0
-FormOnTop=0
-
-[C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\UserInfo.pas]
-ModuleType=TSourceModule
-FormState=0
+FormState=1
 FormOnTop=0
 
 [C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Connect.pas]
@@ -57,9 +41,25 @@ ModuleType=TSourceModule
 FormState=1
 FormOnTop=0
 
+[C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\UserInfo.pas]
+ModuleType=TSourceModule
+FormState=0
+FormOnTop=0
+
+[C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Data.pas]
+ModuleType=TSourceModule
+FormState=0
+FormOnTop=0
+
+[C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Delphi_Chat_0901.dproj]
+ModuleType=TBaseProject
+
+[default.htm]
+ModuleType=TURLModule
+
 [EditWindow0]
 ViewCount=7
-CurrentEditView=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas
+CurrentEditView=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas
 View0=0
 View1=1
 View2=2
@@ -74,12 +74,12 @@ Docked=1
 State=0
 Left=0
 Top=0
-Width=8849
-Height=7356
+Width=10000
+Height=8990
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=8849
-ClientHeight=7356
+ClientWidth=10000
+ClientHeight=8990
 DockedToMainForm=1
 BorlandEditorCodeExplorer=BorlandEditorCodeExplorer@EditWindow0
 TopPanelSize=0
@@ -89,7 +89,7 @@ LeftPanelData=00000800010000000000CA1C000000000000002A0D0000000000000100000000CA
 RightPanelSize=0
 BottomPanelSize=1519
 BottomPanelClients=DockSite1,MessageView
-BottomPanelData=0000080001020100000009000000446F636B5369746531733D00000000000002EF050000000000000100000000733D00000F0000004D65737361676556696577466F726DFFFFFFFF
+BottomPanelData=0000080001020100000009000000446F636B5369746531724500000000000002EF050000000000000100000000724500000F0000004D65737361676556696577466F726DFFFFFFFF
 BottomMiddlePanelSize=0
 BottomMiddlePanelClients=DockSite0,GraphDrawingModel
 BottomMiddelPanelData=0000080001020200000009000000446F636B536974653010000000477261706844726177696E6756696577961D00000000000002F206000000000000FFFFFFFF
@@ -103,7 +103,7 @@ CustomEditViewType=TEditView
 Module=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Data.pas
 CursorX=22
 CursorY=134
-TopLine=113
+TopLine=266
 LeftCol=1
 Elisions=
 Bookmarks={1,353,1}
@@ -112,8 +112,8 @@ EditViewName=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Data.pas
 [View2]
 CustomEditViewType=TEditView
 Module=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\UserInfo.pas
-CursorX=1
-CursorY=6
+CursorX=26
+CursorY=1
 TopLine=1
 LeftCol=1
 Elisions=
@@ -123,9 +123,9 @@ EditViewName=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\UserInfo.pa
 [View3]
 CustomEditViewType=TEditView
 Module=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Connect.pas
-CursorX=1
-CursorY=148
-TopLine=145
+CursorX=16
+CursorY=161
+TopLine=163
 LeftCol=1
 Elisions=
 Bookmarks=
@@ -134,30 +134,30 @@ EditViewName=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Connect.pas
 [View4]
 CustomEditViewType=TEditView
 Module=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas
-CursorX=96
-CursorY=431
-TopLine=405
+CursorX=44
+CursorY=688
+TopLine=661
 LeftCol=1
 Elisions=
-Bookmarks={1,393,8}{2,683,5}{3,683,5}{4,683,5}{9,683,5}
+Bookmarks={1,385,1}{2,672,5}{3,672,5}{4,672,5}{9,672,5}
 EditViewName=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas
 
 [View5]
 CustomEditViewType=TEditView
 Module=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas
-CursorX=97
-CursorY=496
-TopLine=463
+CursorX=117
+CursorY=244
+TopLine=288
 LeftCol=1
 Elisions=
-Bookmarks={1,595,39}{2,93,25}{4,338,49}
+Bookmarks={1,594,39}{2,93,25}{4,337,49}
 EditViewName=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas
 
 [View6]
 CustomEditViewType=TEditView
 Module=C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Delphi_Chat_0901.dpr
-CursorX=42
-CursorY=27
+CursorX=3
+CursorY=11
 TopLine=1
 LeftCol=1
 Elisions=
@@ -200,24 +200,23 @@ Dockable=1
 StayOnTop=0
 
 [Breakpoints]
-Count=17
-Breakpoint0='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas',522,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint1='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas',338,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint2='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',448,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint3='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',444,'',0,1,'',1,0,0,'',1,'','','',0,''
+Count=16
+Breakpoint0='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas',521,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint1='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas',337,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint2='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',439,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint3='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',435,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint4='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Connect.pas',80,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint5='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Data.pas',227,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint6='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Data.pas',273,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint7='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Data.pas',156,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint8='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Data.pas',113,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint9='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',474,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint9='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',465,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint10='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Connect.pas',136,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint11='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Connect.pas',112,'',0,1,'',1,0,0,'',1,'','','',0,''
 Breakpoint12='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Connect.pas',83,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint13='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',377,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint14='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',530,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint15='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas',586,'',0,1,'',1,0,0,'',1,'','','',0,''
-Breakpoint16='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',393,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint13='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',369,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint14='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\ChatRoom.pas',585,'',0,1,'',1,0,0,'',1,'','','',0,''
+Breakpoint15='C:\Users\eznix\OneDrive\문서\RAD Studio\Projects\Chat\Main.pas',385,'',0,1,'',1,0,0,'',1,'','','',0,''
 
 [EmbarcaderoWin32Debugger_AddressBreakpoints]
 Count=0
@@ -230,16 +229,18 @@ PercentageSizes=1
 Create=1
 Visible=1
 Docked=0
-State=1
+State=2
 Left=146
 Top=269
 Width=8932
 Height=8519
 MaxLeft=-5
 MaxTop=-10
-ClientWidth=8849
-ClientHeight=8144
-BottomPanelSize=7083
+MaxWidth=8932
+MaxHeight=8519
+ClientWidth=10000
+ClientHeight=9779
+BottomPanelSize=8657
 BottomPanelClients=EditWindow0
 BottomPanelData=0000080000000000000000000000000000000000000000000000000100000000000000000C0000004564697457696E646F775F30FFFFFFFF
 
@@ -252,11 +253,11 @@ State=0
 Left=0
 Top=0
 Width=1766
-Height=5529
+Height=7163
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1766
-ClientHeight=5529
+ClientHeight=7163
 TBDockHeight=5894
 LRDockWidth=2349
 Dockable=1
@@ -270,11 +271,11 @@ Docked=1
 State=0
 Left=0
 Top=23
-Width=8849
+Width=10000
 Height=1356
 MaxLeft=-1
 MaxTop=-1
-ClientWidth=8849
+ClientWidth=10000
 ClientHeight=1356
 TBDockHeight=1356
 LRDockWidth=2771
@@ -784,16 +785,16 @@ State=0
 Left=0
 Top=23
 Width=1896
-Height=5529
+Height=7163
 MaxLeft=-1
 MaxTop=-1
 ClientWidth=1896
-ClientHeight=5529
+ClientHeight=7163
 TBDockHeight=5365
 LRDockWidth=1896
 Dockable=1
 StayOnTop=0
 TabPosition=3
 ActiveTabID=ProjectManager
-TabDockClients=PropertyInspector,StructureView,ToolForm,DataExplorerContainer,ModelViewTool,ProjectManager,TemplateView,ClassBrowserTool,TFileExplorerForm
+TabDockClients=PropertyInspector,StructureView,ToolForm,DataExplorerContainer,ModelViewTool,ProjectManager,TFileExplorerForm,ClassBrowserTool,TemplateView
 

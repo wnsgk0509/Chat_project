@@ -154,17 +154,16 @@ begin
          Cmd         := SafeGetValue(JSONObject, 'command');
 
          // command 가 LOGIN 일 때만 처리
-         if SameText(Cmd, 'Login') then
+         if SameText(Status, 'OK') then
          begin
-            if SameText(Status, 'OK') then
+            if SameText(Cmd, 'Login') then
             begin
-            // 로그인 성공 처리
+               // 로그인 성공 처리
                UserName := SafeGetValue(JSONObject, 'username'); // 서버가 보내준 이름
 
                ShowMessage('로그인 성공! 사용자 이름: ' + UserName);
 
                UserInfo.CurrentUserName   := UserName;            //UserInfo에 본인 이름 저장
-//               ModalResult                := mrOK; // 로그인 성공 → 폼 닫기 가능
 
                Self.Hide;
                MainForm := TMainForm.Create(Application);
@@ -173,12 +172,13 @@ begin
             end
             else
             begin
-               ShowMessage('Login failed: ' + MsgText);
-               OutputDebugString(PChar('Login failed: ' + MsgText));
+               //
             end;
          end
          else
          begin
+            ShowMessage('로그인 실패: ' + MsgText);
+            OutputDebugString(PChar('Login failed: ' + MsgText));
             OutputDebugString(PChar('Ignored non-LOGIN response: ' + Cmd));
          end;
       end;
