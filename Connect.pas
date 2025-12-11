@@ -169,6 +169,8 @@ begin
                MainForm := TMainForm.Create(Application);
                MainForm.Show;
 
+               Con.SendJson('RESTORE_ROOMS',[]);       //재로그인 시 입장했던 방 요청
+
             end
             else
             begin

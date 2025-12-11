@@ -36,9 +36,6 @@ type
    TReceiveThread = class(TThread)  //서버로 부터 오는 메시지를 실시간으로 받기 위해 스레드 선언
    private
       FClient        : TIdTCPClient;
-      {##스레드 FClient메시지를 받는 용도로만 사용한다.
-      메시지를 받으면, 자기가 해석하지 않고 FCon에 담겨있는 TCon 객체에게 즉시 보고.}
-
       FCon           : TObject; // TCon 참조
    protected
       procedure Execute; override;
@@ -47,8 +44,8 @@ type
    end;
 
    // 메시지 이벤트 타입 정의
-   TMessageEvent = reference to procedure(Sender: TObject; const Msg: string);
-   {## reference to를 사용하는 이유: '코드' 자체를 변수처럼 다루기 위해 + 가독성}
+   TMessageEvent = procedure(Sender: TObject; const Msg: string) of object;
+
 
    // 서버 연결 객체
    TCon = class
@@ -68,6 +65,7 @@ type
       OnInviteUser            : TMessageEvent;
       OnInviteAvailableUsers  : TMessageEvent;
       OnError                 : TMessageEvent;
+      OnRestoreRooms          : TMessageEvent;
 
       constructor Create;
       destructor  Destroy; override;
@@ -96,16 +94,9 @@ uses
 //=======중앙 처리 장치 생성=======//
 constructor TCon.Create;
 begin
-   inherited;       //TCon 의 부모클랙스 실행
+   inherited;       //TCon 의 부모클래스 실행
    //FClient 역할 = 서버 접속, 데이터 전송, 데이터 수신, 접속 종료
    FClient := TIdTCPClient.Create(nil);       //통신에 사용할 TIdTCPClient 객체를 생성
-
-
-   // ================= 이벤트 연결 =================
-   OnLoginResponse := procedure(Sender: TObject; const Msg: string) // 가독성을 위해 이벤트 변수에다가 프로시져 대입 하는 구조
-   begin
-      ConnectForm.HandleLoginResponse(Sender, Msg);     //로그인 이벤트 연결
-   end;
 end;
 
 //=======서버와 연결=======
@@ -171,7 +162,7 @@ begin
       end;
 
       FRecvThread.WaitFor; // 스레드 종료 대기
-      FreeAndNil(FRecvThread); // 4. <--- 여기가 중요! 메모리 해제 및 nil로 초기화
+      FreeAndNil(FRecvThread); // 메모리 해제 및 nil로 초기화
    end
    else
    begin
@@ -231,17 +222,8 @@ begin
       Cmd      := SafeGetValue(JSONObject, 'command');                    //Cmd에 command 값 저장
       Status   := SafeGetValue(JSONObject, 'status');
 
-
-      OutputDebugString(PChar('Raw MsgText received: ' + MsgText));
-      OutputDebugString(PChar('Cmd (Length=' + IntToStr(Length(Cmd)) + '): [' + Cmd + ']'));
-
-      if SameText(Status, 'ERROR') then
-      begin
-         if Assigned(OnError) then
-         OnError(Self, MsgText) // OnError 이벤트 호출
-
       // 이벤트 호출 (Cmd 값 비교 + 이벤트 연결 여부 확인)
-      else if SameText(Cmd, 'LOGIN')                  and Assigned(OnLoginResponse) then
+      if SameText(Cmd, 'LOGIN')                       and Assigned(OnLoginResponse) then
          OnLoginResponse(Self, MsgText)
       else if SameText(Cmd, 'CREATE')                 and Assigned(OnCreateRoom) then
          OnCreateRoom(Self, MsgText)
@@ -257,10 +239,17 @@ begin
          OnInviteUser(Self, MsgText)
       else if SameText(Cmd, 'INVITE_AVAILABLE_USERS') and Assigned(OnInviteUser)then
          OnInviteAvailableUsers(Self, MsgText)
+      else if SameText(Cmd, 'RESTORE_ROOMS')          and Assigned(OnRestoreRooms) then
+         OnRestoreRooms(Self, MsgText)
+      else if SameText(Status, 'ERROR') then
+      begin
+         if Assigned(OnError) then
+            OnError(Self, MsgText); // 공통 에러 핸들러
+      end
 
       else
          OutputDebugString(PChar('Unknown command received: ' + Cmd));
-      end
+
    finally
 
       JSONObject.Free;
@@ -285,56 +274,33 @@ end;
 
 procedure TReceiveThread.Execute;
 var
-   MsgText, MsgCopy  : string;
-   MyCon             : TCon;
+   MsgText : string; // MsgCopy는 필요 없습니다.
+   MyCon   : TCon;
 begin
    MyCon := TCon(FCon);
-   while not Terminated do    //종료하기 전까지 계속 실행
-   begin
-      try
-         if (FClient = nil) or (not FClient.Connected) then  //연결되지 않았으면
-         begin
-            Sleep(10);                                       //계속 실행
-            Continue;
-         end;
+  // 스레드 종료 신호가 올 때까지 무한 반복
+  while not Terminated do
+  begin
+    try
+      // 1. [Blocking I/O] 서버 메시지가 올 때까지 여기서 대기 (UI 멈춤 없음)
+      if (FClient <> nil) and FClient.Connected then
+        MsgText := FClient.IOHandler.ReadLn;
 
-         try
-            MsgText := FClient.IOHandler.ReadLn;      //데이터가 들어오면 MsgText에 저장
-            OutputDebugString(PChar('Thread MsgText received: ' + MsgText));
-         except
-            on E: EIdConnClosedGracefully do
-            begin
-               OutputDebugString('클라이언트 연결 종료');
-               Break;
-            end;
-            on E: EIdSocketError do
-            begin
-               OutputDebugString(PChar('소켓 에러 발생: ' + E.Message));
-               Break;
-            end;
-            on E: Exception do
-            begin
-               OutputDebugString(PChar('ReceiveThread exception: ' + E.Message));
-               Break;
-            end;
-         end;
+      if MsgText <> '' then
+      begin
+        // 2. [Thread-Safe] UI 스레드와의 충돌을 막기 위해 동기화 수행
+        Synchronize(procedure
+        begin
+           // 안전하게 메인 스레드로 데이터 전달
+           if Assigned(MyCon) then
+             MyCon.HandleMessage(MsgText);
+        end);
+      end;
 
-         if MsgText <> '' then
-         begin
-
-            MsgCopy := MsgText;     //데이터 유실 방지
-            TThread.Queue(nil,      //Queue 실행
-               procedure
-               begin
-                  MyCon.HandleMessage(MsgCopy);           //명령 처리 기능
-               end);
-            end;
-
-         except
-            on E: Exception do
-               OutputDebugString(PChar('ReceiveThread outer exception: ' + E.Message));
-         end;
-   end;
+    except
+      Break; // 연결 종료나 에러 발생 시 루프 탈출
+    end;
+  end;
 end;
 
 //========== 에러 방지(Access Violation) ================

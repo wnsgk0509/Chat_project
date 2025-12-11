@@ -48,7 +48,6 @@ type
    TRoomInfo = record
       RoomName    : string;
       LastMessage : string;
-//      UnreadCount : Integer;
    end;
 
    TMainForm = class(TForm)
@@ -75,6 +74,7 @@ type
       procedure HandleCreateRoom          (Sender: TObject; const Msg: string);
       procedure HandleInviteUser          (Sender: TObject; const Msg: string);
       procedure HandleChatMessage         (Sender: TObject; const Msg: string);  //10/10 추가, 채팅이 왔을때 메인폼 업데이트 기능은 Main폼 내부 프로시져로 실행
+      procedure HandleRestoreRooms         (Sender: TObject; const Msg: string);
 
       procedure HandleChatHistory         (Sender: TObject; const Msg: string);
       procedure HandleExitRoom            (Sender: TObject; const Msg: string);
@@ -117,6 +117,7 @@ begin
       Con.OnUserList               := HandleUserList;
       Con.OnInviteAvailableUsers   := HandleInviteAvailableUsers;
       Con.OnError                  := HandleError;
+      Con.OnRestoreRooms           := HandleRestoreRooms;
    end;
 
    FMyRoomList    := TList<TRoomInfo>.Create;      //채팅방 정보를 저장해주는 리스트 생성(방이름, 마지만 메시지)
@@ -213,6 +214,7 @@ procedure TMainForm.HandleInviteUser(Sender: TObject; const Msg: string);
 var
    JSONObject        : TJSONObject;
    RoomName, FromUser: string;
+   status            : string;
    NewRoomInfo       : TRoomInfo;
    i                 : Integer;
    AlreadyExists     : Boolean;
@@ -221,6 +223,14 @@ begin
    try
       if JSONObject = nil then Exit;
 
+      Status := SafeGetValue(JSONObject, 'status');
+      if SameText(Status, 'ERROR') then
+      begin
+         // 에러 메시지라면 사용자에게 보여주고 배너 생성 로직은 중단!
+         ShowMessage('초대 실패: ' + SafeGetValue(JSONObject, 'message'));
+         Exit;
+      end;
+
       // 초대 정보(보낸 사람, 방 이름) 추출
       RoomName := SafeGetValue(JSONObject, 'room');
       FromUser := SafeGetValue(JSONObject, 'username');
@@ -228,7 +238,7 @@ begin
       // 내가 보낸 초대일시 종료
       if SameText(FromUser, UserInfo.CurrentUserName) then Exit;
 
-      ShowMessage(Format('%s님이 %s 방에 초대했습니다.', [FromUser, RoomName]));
+//      ShowMessage(Format('%s님이 %s 방에 초대했습니다.', [FromUser, RoomName]));
 
       // 이미 내 채팅 목록에 있는 방인지 확인
       AlreadyExists := False;
@@ -247,12 +257,59 @@ begin
       begin
          // 데이터 모델(TRoomInfo)을 만들어 FMyRoomList에 추가
          NewRoomInfo.RoomName := RoomName;
-         NewRoomInfo.LastMessage := Format('%s님이 초대했습니다.', [FromUser]);
+         NewRoomInfo.LastMessage := Format('%s invited %s.', [FromUser,UserInfo.CurrentUserName]);
          FMyRoomList.Add(NewRoomInfo);     //내 방목록에 초대된 방 추가
 
          // 메인 화면에 새로운 방 배너(UI)를 추가
          AddChatRoom(NewRoomInfo.RoomName, NewRoomInfo.LastMessage, TArray<string>.Create('default_profile.png'));    //배너 추가
     end;
+   finally
+      JSONObject.Free;
+   end;
+end;
+
+procedure TMainForm.HandleRestoreRooms(Sender: TObject; const Msg: string);
+var
+   JSONObject : TJSONObject;
+   RoomsArray : TJSONArray;
+   RoomObject : TJSONObject;
+   i          : Integer;
+   RoomName   : string;
+   LastMsg    : string;
+
+   // [추가] 데이터 등록을 위한 변수
+   NewRoomInfo: TRoomInfo;
+begin
+   JSONObject := TJSONObject.ParseJSONValue(Msg) as TJSONObject;
+   try
+      if JSONObject = nil then Exit;
+
+      // 'rooms' 키에 들어있는 배열을 가져옴
+      RoomsArray := JSONObject.GetValue('rooms') as TJSONArray;
+
+      if RoomsArray <> nil then
+      begin
+         // 방 개수만큼 반복하며 배너 생성
+         for i := 0 to RoomsArray.Size - 1 do
+         begin
+            RoomObject := RoomsArray.Get(i) as TJSONObject;
+
+            RoomName := SafeGetValue(RoomObject, 'roomName');
+            LastMsg  := SafeGetValue(RoomObject, 'lastMsg');
+
+            // ========================================================
+            // ★ [핵심 수정] UI만 그리지 말고, 데이터 리스트에도 추가해야 함!
+            // ========================================================
+            NewRoomInfo.RoomName := RoomName;
+            NewRoomInfo.LastMessage := LastMsg;
+
+            // 데이터 리스트에 등록 (이게 있어야 HandleChatMessage가 작동함)
+            FMyRoomList.Add(NewRoomInfo);
+
+            // 기존에 만들어둔 함수 재활용!
+            AddChatRoom(RoomName, LastMsg, nil);
+         end;
+      end;
    finally
       JSONObject.Free;
    end;
@@ -430,12 +487,12 @@ begin
 
    if InputQuery('방 생성', '방 이름을 입력하세요:', RoomName) then
    begin
-      RoomName := Trim(RoomName);
+//      RoomName := Trim(RoomName);
 
       // 유효성 검사 (공백 체크)
-      if RoomName = '' then
+      if (Trim(RoomName) = '') or (Pos(' ', RoomName) > 0) then
       begin
-         ShowMessage('공백은 불가능 합니다.');
+         ShowMessage('공백 및 띄어쓰기는  불가능 합니다.');
          Exit;
       end;
       // 유효성 검사 (글자수 제한)
@@ -447,7 +504,7 @@ begin
 
       if ComponentName(RoomName) then
       begin
-         ShowMessage('방 이름에는 _와 공백을 제외한 특수문자를 사용할 수 없습니다.');
+         ShowMessage('방 이름에는 _ 를  제외한 특수문자를 사용할 수 없습니다.');
          Exit;
       end;
 
@@ -490,6 +547,7 @@ begin
       Con.OnUserList               := nil;
       Con.OnInviteAvailableUsers   := nil;
       Con.OnError                  := nil;
+      Con.OnRestoreRooms           := nil;
    end;
 
    // 숨어있던 로그인창(ConnectForm)을 다시 보여줌
@@ -568,11 +626,14 @@ end;
 
 //업데이트 된 데이터 UI에 최신화
 procedure TMainForm.UpdateRoomLastMessage(const RoomInfo: TRoomInfo);
+const
+   MaxLen = 20; // 20251202[추가] 미리보기 최대 문자열
 var
    i           : Integer;
    RoomPanel   : TPanel;
    LastMsgLabel: TLabel;
    TimeStr     : string;
+   OneLineMsg   : string; // 20251202[추가] 한 줄로 정리된 메시지를 담을 변수
 begin
    TimeStr := FormatDateTime('hh:nn', Now); // 현재 시간
 
@@ -582,12 +643,27 @@ begin
       if (ScrollBox1.Controls[i] is TPanel) and (ScrollBox1.Controls[i].Hint  = RoomInfo.RoomName) then         //배너가 TPanel 타입 이고 배너의 이름과 찾는 방 이름과 일치하면
       begin
          RoomPanel := TPanel(ScrollBox1.Controls[i]);      //RoomPanle 에 TPanel 타입 저장
+         LastMsgLabel := TLabel(RoomPanel.FindComponent('lblLastMsg_' + RoomInfo.RoomName));  //LastMsgLavel 이라는 변수에 lblLastMsg_ 방 이름 저장후
 
-            LastMsgLabel := TLabel(RoomPanel.FindComponent('lblLastMsg_' + RoomInfo.RoomName));  //LastMsgLavel 이라는 변수에 lblLastMsg_ 방 이름 저장후
-            //라벨의 캡션을 '마지막 메시지'와 '시간'을 합쳐서 업데이트
-            if Assigned(LastMsgLabel) then
-               LastMsgLabel.Caption := Format('%s  [%s]', [RoomInfo.LastMessage, TimeStr]);
-            Break;
+         //라벨의 캡션을 '마지막 메시지'와 '시간'을 합쳐서 업데이트
+         if Assigned(LastMsgLabel) then
+         begin
+            OneLineMsg := RoomInfo.LastMessage;
+
+            // 먼저 줄바꿈 문자를 공백으로 바꿉니다.
+            OneLineMsg := StringReplace(OneLineMsg, #13#10, ' ', [rfReplaceAll]);
+            OneLineMsg := StringReplace(OneLineMsg, #10, ' ', [rfReplaceAll]);
+            OneLineMsg := StringReplace(OneLineMsg, #13, ' ', [rfReplaceAll]);
+            OneLineMsg := StringReplace(OneLineMsg, '\n', ' ', [rfReplaceAll]);
+
+            // 글자 수가 설정값보다 길면 자르고 '...' 붙이기
+            if Length(OneLineMsg) > MaxLen then
+               OneLineMsg := Copy(OneLineMsg, 1, MaxLen) + '...';
+
+            // 캡션 업데이트
+            LastMsgLabel.Caption := Format('%s [%s]', [OneLineMsg, TimeStr]);
+         end;
+         Break;
 
       end;
    end;
@@ -605,17 +681,20 @@ var
    Image_Folder            : String;
 begin
 
-   // Y 위치 계산
-   YPos := 10;
-   if ScrollBox1.ControlCount > 0 then
-      YPos := ScrollBox1.Controls[ScrollBox1.ControlCount - 1].Top +
-              ScrollBox1.Controls[ScrollBox1.ControlCount - 1].Height + 10;
-
    // 패널 생성
    RoomPanel               := TPanel.Create(ScrollBox1);
    RoomPanel.Parent        := ScrollBox1;
+
+   RoomPanel.Align            := alTop;           //  위쪽으로 자동 정렬
+
+   RoomPanel.Height           := 70;              // 높이는 고정
+   RoomPanel.Top              := 10000;           // 무조건 맨 아래에 추가되도록 큰 값 부여
+
+   RoomPanel.BevelOuter       := bvNone;     // 기본 입체 테두리 끄기
+   RoomPanel.BevelKind        := bkFlat;
+   RoomPanel.BevelEdges       := [beBottom]; // 아래쪽선 그리기
+
    RoomPanel.SetBounds(10, YPos, ScrollBox1.ClientWidth - 20, 70);
-   RoomPanel.BevelOuter    := bvNone;
    RoomPanel.Color         := clWhite;
    RoomPanel.Hint          := RoomName;
    RoomPanel.Name          := 'Panel_' + StringReplace(RoomName, ' ', '_', [rfReplaceAll]);

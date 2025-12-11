@@ -46,6 +46,10 @@ uses
 
 
 type
+   TUserData = class
+      UserID: string;
+   end;
+
    TChatRoomForm = class(TForm)
       PanelTop                         : TPanel;         // 상단 패널 (방 정보, 유저 이미지)
       btnMore                          : TSpeedButton;   // 메뉴 버튼 (더보기)
@@ -58,7 +62,10 @@ type
       ScrollBoxMessages                : TScrollBox;     // 채팅 메시지 표시 영역
       MemoMessage                      : TMemo;          // 프로필 이미지
       lblRoomName                      : TLabel;         // 방 이름 표시
-      lblUserCount                     : TLabel;         // 방 유저 수 표시
+      lblUserCount                     : TLabel;
+    pnlRight: TPanel;
+    pnlLeft: TPanel;
+    lblTextCount: TLabel;         // 방 유저 수 표시
 
 
       procedure FormCreate          (Sender: TObject);
@@ -73,7 +80,9 @@ type
 
       procedure MemoMessageKeyDown  (Sender: TObject; var Key: Word;
                                     Shift: TShiftState);
-      procedure MemoMessageKeyPress (Sender: TObject; var Key: Char);
+    procedure MemoMessageKeyPress(Sender: TObject; var Key: Char);
+    procedure MemoMessageChange(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
 
    private
       FUserImages          : TArray<string>;    // 사용자 이미지 배열
@@ -132,6 +141,7 @@ end;
 
 procedure TChatRoomForm.FormCreate(Sender: TObject);
 begin
+
    // ================= Top Panel 기본 설정 =================
    PanelTop.Align          := alTop;
    PanelTop.Height         := 70;
@@ -158,6 +168,7 @@ begin
 
    MemoMessage.ScrollBars  := ssVertical;
    MemoMessage.WordWrap    := True;
+   MemoMessage.MaxLength   := 255;
    MemoMessage.Lines.Clear;
 
   // ================= ScrollBox 설정 =================
@@ -168,6 +179,25 @@ begin
    MenuExit.OnClick     := MenuExitClick;
    MenuLeave.OnClick    := MenuLeaveClick;
    MenuInvite.OnClick   := MenuInviteClick;
+end;
+
+procedure TChatRoomForm.FormDestroy(Sender: TObject);
+var
+  i: Integer;
+begin
+  //  체크리스트박스에 숨겨둔 ID 객체들 메모리 해제
+  if Assigned(CLBAvailableUsers) then
+  begin
+    for i := 0 to CLBAvailableUsers.Count - 1 do
+    begin
+      if Assigned(CLBAvailableUsers.Items.Objects[i]) then
+      begin
+        // TUserData 형태로 캐스팅해서 Free
+        TObject(CLBAvailableUsers.Items.Objects[i]).Free;
+        CLBAvailableUsers.Items.Objects[i] := nil;
+      end;
+    end;
+  end;
 end;
 
 constructor TChatRoomForm.CreateWithRoom(AOwner: TComponent; const ACurrentRoomName: string);
@@ -184,24 +214,29 @@ end;
 procedure TChatRoomForm.btnSendClick(Sender: TObject);
 var
    JSONObj  : TJSONObject;
+   SafeMsg  : string; //20251202 줄바꿈 에러 추가
 begin
 
    if Trim(MemoMessage.Text) = '' then     //nil값 전송x
       Exit;
 
+
+   SafeMsg := StringReplace(MemoMessage.Text, #13#10, '\n', [rfReplaceAll]);
+
    JSONObj := TJSONObject.Create;
    try
       JSONObj.AddPair('command', TJSONString.Create('CHAT'));              //객체에 command 키와 CHAT 을 담는다
       JSONObj.AddPair('room', TJSONString.Create(FCurrentRoomName));
-      JSONObj.AddPair('message', TJSONString.Create(MemoMessage.Text));
+      JSONObj.AddPair('message', TJSONString.Create(SafeMsg));
 
       if Assigned(Con) and Con.Client.Connected then                      //Con이 유효하고 서버워 연결이 되어 있다면
          Con.SendJson('CHAT', [                                           //서버에 전송
          'room', FCurrentRoomName,
-         'message', MemoMessage.Text
+         'message', SafeMsg               //20251202[수정] MemoMessage.Text 대신 SafeMsg 전송
          ]);
 
       MemoMessage.Clear;                                                  //입력창 지운다
+      MemoMessage.SetFocus;
    finally
       JSONObj.Free;
    end;
@@ -307,7 +342,6 @@ end;
 procedure TChatRoomForm.SendUserListRequest(const RoomName: string);
 begin
    try
-
       // 서버에 전송
       Con.SendJson('USER_LIST', ['room', RoomName]);
    finally
@@ -365,10 +399,15 @@ var
    lblMsg, lblTime, lblName,lblSys                    : TLabel;
    Img                                                : TImage;
    MaxWidth, Padding, TextWidth, TextHeight, YPos, i  : Integer;
-   TimeStr, Line, ImgFile, Image_Folder               : string;
+   //20251202 줄바꿈 기능 수정
+   TimeStr, ImgFile, Image_Folder                     : string;
+   ProcessedMsg, CurrentLine                          : string;
+   R                                                  : TRect;
+   //20251202 줄바꿈 기능 수정
+   CalcWidth, CalcHeight                              : Integer;
 
 begin
-   Padding  := 12;      // 말풍선 여백
+   Padding  := 4;      // 말풍선 여백
    MaxWidth := 200;     // 메시지 최대 너비
 
   // Y 위치 계산
@@ -410,103 +449,127 @@ begin
    end
    else //유저 채팅인 경우
    begin
-   // 일반 메시지 라벨 생성
-   lblMsg            := TLabel.Create(MsgPanel);
-   lblMsg.Parent     := MsgPanel;
-   lblMsg.WordWrap   := True;
-   lblMsg.Caption    := Msg;
-   lblMsg.Font.Size  := 12;
-   lblMsg.Alignment  := taLeftJustify; // 항상 왼쪽부터 글 시작
-   lblMsg.Transparent:= False;         //배경색 보이게
+      lblMsg             := TLabel.Create(MsgPanel);
+      lblMsg.Parent      := MsgPanel;
+      lblMsg.AutoSize    := False;
+      lblMsg.WordWrap    := True;
+      lblMsg.Font.Size   := 12;
+      lblMsg.Alignment   := taLeftJustify;
+      lblMsg.Transparent := False;
 
-   // 글자 폭 계산
-   TextWidth := lblMsg.Canvas.TextWidth(Msg) + Padding;
-   if TextWidth < 50 then TextWidth := 50;
-   if TextWidth > MaxWidth then TextWidth := MaxWidth;
-
-   lblMsg.Width := TextWidth;
-
-   // 줄바꿈 높이 계산
-   TextHeight := lblMsg.Canvas.TextHeight(Msg) * ((lblMsg.Canvas.TextWidth(Msg) div MaxWidth) + 1);
-   lblMsg.Height := TextHeight + Padding;
-
-   // 줄바꿈 처리
-   lblMsg.Caption := '';
-   Line := '';
-   for i := 1 to Length(Msg) do
-   begin
-      Line := Line + Msg[i];
-      if lblMsg.Canvas.TextWidth(Line) > MaxWidth - Padding then  // 여백 20 포함
       begin
-         lblMsg.Caption := lblMsg.Caption + Line + #13#10;   //
-         Line := '';
-      end;
-   end;
-   lblMsg.Caption := lblMsg.Caption + Line;
+         ProcessedMsg := '';
+         CurrentLine := '';
 
+         // 폰트 크기 동기화
+         lblMsg.Canvas.Font := lblMsg.Font;
 
-   // 시간 라벨
-   TimeStr              := FormatDateTime('hh:nn', Now);
-   lblTime              := TLabel.Create(MsgPanel);
-   lblTime.Parent       := MsgPanel;
-   lblTime.Caption      := TimeStr;
-   lblTime.Font.Size    := 8;
-   lblTime.Font.Color   := clBlack;
-   lblTime.Transparent  := False;
+         for i := 1 to Length(Msg) do
+         begin
+            // 현재 줄에 다음 글자를 더했을 때 폭이 MaxWidth를 넘는지 확인
+            if lblMsg.Canvas.TextWidth(CurrentLine + Msg[i]) > (MaxWidth - Padding) then
+            begin
+               // 넘으면 엔터 추가
+               ProcessedMsg := ProcessedMsg + CurrentLine + #13#10;
+               // 현재 글자부터 다시 새로운 줄 시작
+               CurrentLine := Msg[i];
+            end
+            else
+            begin
+               // 안 넘으면 그냥 뒤에 붙임
+               CurrentLine := CurrentLine + Msg[i];
+            end;
+         end;
+         // 마지막 남은 줄 추가
+         ProcessedMsg := ProcessedMsg + CurrentLine;
 
-   if IsMine then
-   begin
-      // 오른쪽 정렬 (본인)
-      lblMsg.Left    := ScrollBoxMessages.Width - lblMsg.Width - Padding*2;
-      lblMsg.Top     := Padding;
-      lblMsg.Color   := clSkyBlue;
-      lblMsg.Font.Color := clWhite;
-
-      lblTime.Left   := lblMsg.Left - lblTime.Width - 3;
-      lblTime.Top    := lblMsg.Top + lblMsg.Height - lblTime.Height;
-   end
-   else //(상대)
-   begin
-      // 프로필 이미지
-      Img         := TImage.Create(MsgPanel);
-      Img.Parent  := MsgPanel;
-      Img.SetBounds(Padding, Padding, 40, 40);
-      Img.Stretch := True;
-
-      ImgFile := UserImg;   //서버가 준 이미지 파일 저장
-      Image_Folder := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName) + 'image');
-
-      // 서버가 준 이미지가 없거나, 해당 파일이 존재하지 않으면
-      if (ImgFile = '') or not FileExists(Image_Folder + ImgFile) then
-      begin
-         //  GetUserImage를 호출하여 사용자별 기본 이미지를 가져옴
-         ImgFile := GetUserImage(UserName);
+         // 가공된 메시지를 라벨에 입력
+         lblMsg.Caption := ProcessedMsg;
       end;
 
-      //  최종 결정된 이미지 파일을 로드
-      if FileExists(Image_Folder + ImgFile) then
-         Img.Picture.LoadFromFile(Image_Folder + ImgFile);
+      //  크기 계산
+      R := Rect(0, 0, MaxWidth - Padding, 0);
 
-      // 이름 라벨
-      lblName              := TLabel.Create(MsgPanel);
-      lblName.Parent       := MsgPanel;
-      lblName.Caption      := UserName;
-      lblName.Font.Style   := [fsBold];
-      lblName.SetBounds(Img.Left + Img.Width + 5, Padding, MsgPanel.Width - Img.Width - 20, 15);
+      DrawText(lblMsg.Canvas.Handle, PChar(lblMsg.Caption), Length(lblMsg.Caption), R,
+               DT_CALCRECT or DT_WORDBREAK or DT_LEFT);
 
-      // 왼쪽 정렬
-      lblMsg.Left       := Img.Left + Img.Width + 5;
-      lblMsg.Top        := lblName.Top + lblName.Height + 2;
-      lblMsg.Alignment  := taLeftJustify;
-      lblMsg.Color      := clWhite;
-      lblMsg.Font.Color := clBlack;
+      CalcWidth  := R.Right - R.Left;
+      CalcHeight := R.Bottom - R.Top;
 
-      lblTime.Left      := lblMsg.Left + lblMsg.Width + 3;
-      lblTime.Top       := lblMsg.Top + lblMsg.Height - lblTime.Height;
-   end;
+      //  너비 적용
+      // 딱 맞게 처리
+      if CalcWidth < 15 then
+         lblMsg.Width := 15 + Padding  // 최소폭 + 좌우여백
+      else
+         lblMsg.Width := CalcWidth + Padding; // 글자폭 + 좌우여백
 
-   // 채팅 과 채팅 사이 높이
-   MsgPanel.Height      := lblMsg.Top + lblMsg.Height ;
+      //  높이 적용
+      // 글자 높이 + 위아래 여백
+      lblMsg.Height := CalcHeight +Padding;
+
+
+      // 시간 라벨
+      TimeStr              := FormatDateTime('hh:nn', Now);
+      lblTime              := TLabel.Create(MsgPanel);
+      lblTime.Parent       := MsgPanel;
+      lblTime.Caption      := TimeStr;
+      lblTime.Font.Size    := 8;
+      lblTime.Font.Color   := clBlack;
+      lblTime.Transparent  := False;
+
+      if IsMine then
+      begin
+         // 오른쪽 정렬 (본인)
+         lblMsg.Left    := ScrollBoxMessages.Width - lblMsg.Width - Padding*6;
+         lblMsg.Top     := Padding;
+         lblMsg.Color   := $00FA8436;
+         lblMsg.Font.Color := clWhite;
+
+         lblTime.Left   := lblMsg.Left - lblTime.Width - 3;
+         lblTime.Top    := lblMsg.Top + lblMsg.Height - lblTime.Height;
+      end
+      else //(상대)
+      begin
+         // 프로필 이미지
+         Img         := TImage.Create(MsgPanel);
+         Img.Parent  := MsgPanel;
+         Img.SetBounds(Padding, Padding, 40, 40);
+         Img.Stretch := True;
+
+         ImgFile := UserImg;   //서버가 준 이미지 파일 저장
+         Image_Folder := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName) + 'image');
+
+         // 서버가 준 이미지가 없거나, 해당 파일이 존재하지 않으면
+         if (ImgFile = '') or not FileExists(Image_Folder + ImgFile) then
+         begin
+            //  GetUserImage를 호출하여 사용자별 기본 이미지를 가져옴
+            ImgFile := GetUserImage(UserName);
+         end;
+
+         //  최종 결정된 이미지 파일을 로드
+         if FileExists(Image_Folder + ImgFile) then
+            Img.Picture.LoadFromFile(Image_Folder + ImgFile);
+
+         // 이름 라벨
+         lblName              := TLabel.Create(MsgPanel);
+         lblName.Parent       := MsgPanel;
+         lblName.Caption      := UserName;
+         lblName.Font.Style   := [fsBold];
+         lblName.SetBounds(Img.Left + Img.Width + 5, Padding, MsgPanel.Width - Img.Width - 20, 15);
+
+         // 왼쪽 정렬
+         lblMsg.Left       := Img.Left + Img.Width + 5;
+         lblMsg.Top        := lblName.Top + lblName.Height + 2;
+         lblMsg.Alignment  := taLeftJustify;
+         lblMsg.Color      := clWhite;
+         lblMsg.Font.Color := clBlack;
+
+         lblTime.Left      := lblMsg.Left + lblMsg.Width + 3;
+         lblTime.Top       := lblMsg.Top + lblMsg.Height - lblTime.Height;
+      end;
+
+      // 채팅 과 채팅 사이 높이
+      MsgPanel.Height      := lblMsg.Top + lblMsg.Height ;
    end;
 
    // 스크롤 아래쪽
@@ -537,25 +600,52 @@ begin
 
 end;
 
+procedure TChatRoomForm.MemoMessageChange(Sender: TObject);
+var
+   CurrentLen: Integer;
+begin
+   CurrentLen := Length(MemoMessage.Text);
+   lblTextCount.Caption := Format('%d / 255', [CurrentLen]);
+
+   if CurrentLen >= 255 then
+   begin
+      lblTextCount.Font.Color := clRed;
+      lblTextCount.Font.Style := [fsBold];
+   end
+   else
+   begin
+      lblTextCount.Font.Color := clBlack;
+   end;
+end;
+
 // KeyDown 이벤트
 procedure TChatRoomForm.MemoMessageKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-   if (Key = VK_RETURN) and not (ssShift in Shift) then
+   // 엔터키를 눌렀는데
+   if Key = VK_RETURN then
    begin
-      btnSendClick(btnSend);  // 전송 버튼 클릭 처리
-      Key := 0;               // 기본 줄바꿈 막기 (1차)
+      // Shift 키가 눌려있다면 -> 줄바꿈 허용
+      if ssShift in Shift then
+      begin
+         Exit; // Memo가 알아서 줄바꿈 함
+      end
+      // 그냥 엔터만 눌렀다면 -> 전송
+      else
+      begin
+         Key := 0; // 줄바꿈 제거
+         btnSendClick(Self); // 전송 버튼 클릭
+      end;
    end;
 end;
 
-// KeyPress 이벤트
 procedure TChatRoomForm.MemoMessageKeyPress(Sender: TObject; var Key: Char);
 begin
-   if (Key = #13) and not (ssShift in KeyDataToShiftState(GetKeyState(VK_SHIFT))) then
+   // 엔터 문자가 들어왔는데 Shift 키가 안 눌린 상태 => 엔터 전송
+   if (Key = #13) and (GetKeyState(VK_SHIFT) >= 0) then
    begin
-      Key := #0;  // 줄바꿈 문자 막기 (2차)
+      Key := #0; // 20251202 엔터 전송시 다음 입력시 줄바꿈 에러 수정
    end;
 end;
-
 
 procedure TChatRoomForm.btnMoreClick(Sender: TObject);
 begin
@@ -740,9 +830,13 @@ end;
 procedure TChatRoomForm.HandleInviteAvailableUsers(Sender: TObject; const Msg: string);
 var
    JSONObject   : TJSONObject;
+   UserObj      : TJSONObject;
    UsersArray   : TJSONArray;
+   Val          : TJSONValue;
    i            : Integer;
    UserName     : string;
+   UserID       : string;
+   UserData     : TUserData;
 begin
 
    if not Assigned(InvitePanel) then
@@ -770,17 +864,41 @@ begin
    JSONObject   := TJSONObject.ParseJSONValue(Msg) as TJSONObject;
    try
       if JSONObject = nil then Exit;
-         UsersArray := JSONObject.GetValue('users') as TJSONArray;   //users 의 값 = 초대가능한 유저 이름을 가지고 있음
+      UsersArray := JSONObject.GetValue('users') as TJSONArray;   //users 의 값 = 초대가능한 유저 이름을 가지고 있음
       if UsersArray = nil then Exit;
 
+      for i := 0 to CLBAvailableUsers.Count - 1 do
+         CLBAvailableUsers.Items.Objects[i].Free;
+         
       CLBAvailableUsers.Items.Clear;                                //CLB초대 가능유저 초기화
-         for i := 0 to UsersArray.Size - 1 do                       //초대 가능한 유저만큼 반복
+
+      for i := 0 to UsersArray.Size - 1 do
       begin
-         UserName := UsersArray.Get(i).Value;                       //초대 가능한 유저 이름을 저장
-         CLBAvailableUsers.Items.Add(UserName);                     //CLB에 추가
+         // 1. 일단 가장 기본 형태인 TJSONValue로 받습니다. (객체일 수도, 문자열일 수도 있음)
+         Val := UsersArray.Get(i); 
+         
+         // 2. 타입 체크: 서버가 '객체(Object)'를 보냈는가? (ID 포함된 새 방식)
+         if Val is TJSONObject then
+         begin
+            UserObj  := TJSONObject(Val);
+            UserName := SafeGetValue(UserObj, 'name');
+            UserID   := SafeGetValue(UserObj, 'id');
+         end
+         // 3. 타입 체크: 서버가 '문자열(String)'을 보냈는가? (옛날 방식 or 서버 수정 안됨)
+         else 
+         begin
+            UserName := Val.Value;       // 그냥 값(이름)을 가져옴
+            UserID   := UserName;        // ID가 없으니 이름과 똑같이 설정 (에러 방지용 임시 조치)
+         end;
+
+         // 4. 리스트에 추가 (공통 로직)
+         UserData := TUserData.Create;
+         UserData.UserID := UserID;
+         
+         CLBAvailableUsers.Items.AddObject(UserName, UserData);
       end;
 
-      InvitePanel.Visible := True; // 패널 띄우기
+      InvitePanel.Visible := True;
    finally
       JSONObject.Free;
    end;
@@ -790,19 +908,28 @@ end;
 procedure TChatRoomForm.BtnInviteClick(Sender: TObject);
 var
    i: Integer;
+   TargetID: string;
 begin
    if not Assigned(CLBAvailableUsers) then Exit;
 
    for i := 0 to CLBAvailableUsers.Count - 1 do
    begin
       if CLBAvailableUsers.Checked[i] then
-         Con.SendJson('INVITE', [
-            'user', CLBAvailableUsers.Items[i],   // 초대할 유저 이름
-            'room', CurrentRoomName               // 현재 방 이름
+      begin
+         if CLBAvailableUsers.Items.Objects[i] = nil then Continue;
+         begin
+            // ★ [핵심] ItemIndex가 아니라, 반드시 [i]를 사용해야 함!
+            TargetID := TUserData(CLBAvailableUsers.Items.Objects[i]).UserID;
+
+
+            // 서버로 보낼 때 ID, 방 이름 전송
+            Con.SendJson('INVITE', [
+               'user', TargetID,          // ID 전송
+               'room', CurrentRoomName
             ]);
-
+         end;
+      end;
    end;
-
    // 초대 후 패널 숨기기
    InvitePanel.Visible := False;
 end;

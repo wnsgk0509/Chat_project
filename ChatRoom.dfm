@@ -2,7 +2,7 @@ object ChatRoomForm: TChatRoomForm
   Left = 0
   Top = 0
   Caption = #52292#54021#48169
-  ClientHeight = 516
+  ClientHeight = 515
   ClientWidth = 366
   Color = clWhite
   Font.Charset = DEFAULT_CHARSET
@@ -12,6 +12,7 @@ object ChatRoomForm: TChatRoomForm
   Font.Style = []
   OldCreateOrder = False
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   PixelsPerInch = 96
   TextHeight = 13
   object PanelTop: TPanel
@@ -20,7 +21,7 @@ object ChatRoomForm: TChatRoomForm
     Width = 366
     Height = 41
     Align = alTop
-    Color = 16776176
+    Color = 14470072
     Font.Charset = DEFAULT_CHARSET
     Font.Color = clWindowText
     Font.Height = -11
@@ -55,41 +56,86 @@ object ChatRoomForm: TChatRoomForm
   end
   object PanelBottom: TPanel
     Left = 0
-    Top = 432
+    Top = 431
     Width = 366
     Height = 84
     Align = alBottom
     Caption = 'Panel1'
+    Color = clWhite
+    ParentBackground = False
     TabOrder = 1
-    object btnSend: TButton
-      Left = 290
+    object pnlRight: TPanel
+      Left = 295
       Top = 1
-      Width = 75
+      Width = 70
       Height = 82
       Align = alRight
-      Caption = #51204#49569
+      BevelOuter = bvNone
+      Color = clWhite
+      ParentBackground = False
       TabOrder = 0
-      OnClick = btnSendClick
+      object lblTextCount: TLabel
+        Left = 0
+        Top = 69
+        Width = 28
+        Height = 13
+        Align = alBottom
+        Alignment = taCenter
+        Caption = '0/255'
+        StyleElements = [seClient, seBorder]
+      end
+      object btnSend: TButton
+        Left = 0
+        Top = 0
+        Width = 70
+        Height = 69
+        Align = alClient
+        Caption = #51204#49569
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        TabOrder = 0
+        OnClick = btnSendClick
+      end
     end
-    object MemoMessage: TMemo
+    object pnlLeft: TPanel
       Left = 1
       Top = 1
-      Width = 289
+      Width = 294
       Height = 82
       Align = alClient
-      ScrollBars = ssVertical
+      Caption = 'pnlLeft'
       TabOrder = 1
-      OnKeyDown = MemoMessageKeyDown
-      OnKeyPress = MemoMessageKeyPress
+      object MemoMessage: TMemo
+        Left = 1
+        Top = 1
+        Width = 292
+        Height = 80
+        Align = alClient
+        Font.Charset = DEFAULT_CHARSET
+        Font.Color = clWindowText
+        Font.Height = -11
+        Font.Name = 'Tahoma'
+        Font.Style = []
+        ParentFont = False
+        ScrollBars = ssVertical
+        TabOrder = 0
+        OnChange = MemoMessageChange
+        OnKeyDown = MemoMessageKeyDown
+        OnKeyPress = MemoMessageKeyPress
+      end
     end
   end
   object ScrollBoxMessages: TScrollBox
     Left = 0
     Top = 41
     Width = 366
-    Height = 391
+    Height = 390
     Align = alClient
-    Color = 16776176
+    Color = 14470072
     ParentColor = False
     TabOrder = 2
   end

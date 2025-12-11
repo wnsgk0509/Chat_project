@@ -4,7 +4,7 @@ object MainForm: TMainForm
   Caption = 'ChatRooms'
   ClientHeight = 600
   ClientWidth = 400
-  Color = 16776176
+  Color = clWhite
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -11
